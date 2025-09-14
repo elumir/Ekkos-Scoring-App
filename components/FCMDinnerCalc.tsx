@@ -16,6 +16,11 @@ const MILESTONES = [
   { id: 'HAVE_100', label: 'First to Have $100', description: '+50% to cash earned' },
 ];
 
+const EMPLOYEES = [
+  { id: 'DISCOUNT', label: 'Discount Manager (–$1)', description: 'Reduces unit price by $1 per manager.' },
+  { id: 'PRICING', label: 'Pricing Manager (–$3)', description: 'Reduces unit price by $3 per manager.' },
+];
+
 type FoodType = 'pizzas' | 'burgers' | 'drinks' | 'coffee' | 'noodles' | 'kimchi' | 'sushi';
 interface FoodItems {
   pizzas: number;
@@ -27,6 +32,7 @@ interface FoodItems {
   sushi: number;
 }
 type HouseType = 'base' | 'garden' | 'park';
+type EmployeeType = 'DISCOUNT' | 'PRICING';
 
 const FoodItemCounter: React.FC<{
   label: string,
@@ -65,10 +71,16 @@ const FCMDinnerCalc: React.FC = () => {
   });
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
   const [selectedMilestones, setSelectedMilestones] = useState<Set<string>>(new Set());
+  const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
+  const [employeeCounts, setEmployeeCounts] = useState({ DISCOUNT: 0, PRICING: 0 });
+
   const [isModuleDropdownOpen, setIsModuleDropdownOpen] = useState(false);
   const [isMilestoneDropdownOpen, setIsMilestoneDropdownOpen] = useState(false);
+  const [isEmployeeDropdownOpen, setIsEmployeeDropdownOpen] = useState(false);
+  
   const moduleDropdownRef = useRef<HTMLDivElement>(null);
   const milestoneDropdownRef = useRef<HTMLDivElement>(null);
+  const employeeDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -77,6 +89,9 @@ const FCMDinnerCalc: React.FC = () => {
       }
       if (milestoneDropdownRef.current && !milestoneDropdownRef.current.contains(event.target as Node)) {
         setIsMilestoneDropdownOpen(false);
+      }
+      if (employeeDropdownRef.current && !employeeDropdownRef.current.contains(event.target as Node)) {
+        setIsEmployeeDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -97,10 +112,8 @@ const FCMDinnerCalc: React.FC = () => {
 
     setItems(currentItems => {
         let itemsChanged = false;
-        // FIX: Operator '>' cannot be applied to types 'unknown' and 'number'. By typing the result of JSON.parse, we ensure type safety.
         const newItems: Record<HouseType, FoodItems> = JSON.parse(JSON.stringify(currentItems));
 
-        // When Lobbyist is disabled, reset the park items to 0
         if (!selectedModules.has('LOBBYIST')) {
             const parkItems = newItems.park;
             if (Object.values(parkItems).some(count => count > 0)) {
@@ -109,7 +122,6 @@ const FCMDinnerCalc: React.FC = () => {
             }
         }
 
-        // When a food module is disabled, reset its items to 0
         Object.entries(foodModuleMapping).forEach(([moduleId, foodType]) => {
             if (!selectedModules.has(moduleId)) {
                 if (newItems.base[foodType] > 0 || newItems.garden[foodType] > 0 || newItems.park[foodType] > 0) {
@@ -124,6 +136,22 @@ const FCMDinnerCalc: React.FC = () => {
         return itemsChanged ? newItems : currentItems;
     });
   }, [selectedModules]);
+
+  useEffect(() => {
+    setEmployeeCounts(currentCounts => {
+        let countsChanged = false;
+        const newCounts = { ...currentCounts };
+        if (!selectedEmployees.has('DISCOUNT') && newCounts.DISCOUNT > 0) {
+            newCounts.DISCOUNT = 0;
+            countsChanged = true;
+        }
+        if (!selectedEmployees.has('PRICING') && newCounts.PRICING > 0) {
+            newCounts.PRICING = 0;
+            countsChanged = true;
+        }
+        return countsChanged ? newCounts : currentCounts;
+    });
+  }, [selectedEmployees]);
 
   const handleItemChange = (houseType: HouseType, foodType: FoodType, change: number) => {
     setItems(prev => ({
@@ -159,9 +187,30 @@ const FCMDinnerCalc: React.FC = () => {
     });
   };
 
+  const handleEmployeeToggle = (employeeId: string) => {
+    setSelectedEmployees(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(employeeId)) {
+        newSet.delete(employeeId);
+      } else {
+        newSet.add(employeeId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleEmployeeCountChange = (employeeId: EmployeeType, change: number) => {
+    setEmployeeCounts(prev => ({
+      ...prev,
+      [employeeId]: Math.max(0, prev[employeeId] + change)
+    }));
+  };
+
   const { totals, grandTotal, effectiveUnitPrice } = useMemo(() => {
     const hasLowerPrices = selectedMilestones.has('LOWER_PRICES');
-    const effectiveUnitPrice = Math.max(0, baseUnitPrice - (hasLowerPrices ? 1 : 0));
+    const employeeDeduction = (employeeCounts.DISCOUNT * 1) + (employeeCounts.PRICING * 3);
+    const effectiveUnitPrice = Math.max(0, baseUnitPrice - (hasLowerPrices ? 1 : 0) - employeeDeduction);
+
     const pizzaBonus = selectedMilestones.has('PIZZA_MARKETED') ? 5 : 0;
     const burgerBonus = selectedMilestones.has('BURGER_MARKETED') ? 5 : 0;
     const drinkBonus = selectedMilestones.has('DRINK_MARKETED') ? 5 : 0;
@@ -195,24 +244,15 @@ const FCMDinnerCalc: React.FC = () => {
       grandTotal: finalGrandTotal,
       effectiveUnitPrice,
     };
-  }, [items, baseUnitPrice, selectedMilestones, selectedModules]);
+  }, [items, baseUnitPrice, selectedMilestones, selectedModules, employeeCounts]);
 
-  const getSelectedModulesLabel = () => {
-    if (selectedModules.size === 0) return 'Select Modules';
-    if (selectedModules.size === 1) {
-      const id = selectedModules.values().next().value;
-      return MODULES.find(m => m.id === id)?.label || 'Select Modules';
+  const getSelectedLabel = (items: any[], selectedIds: Set<string>, defaultText: string, singularText: string, pluralText: string) => {
+    if (selectedIds.size === 0) return defaultText;
+    if (selectedIds.size === 1) {
+      const id = selectedIds.values().next().value;
+      return items.find(m => m.id === id)?.label || defaultText;
     }
-    return `${selectedModules.size} Modules Selected`;
-  };
-
-  const getSelectedMilestonesLabel = () => {
-    if (selectedMilestones.size === 0) return 'Select Milestones';
-    if (selectedMilestones.size === 1) {
-      const id = selectedMilestones.values().next().value;
-      return MILESTONES.find(m => m.id === id)?.label || 'Select Milestones';
-    }
-    return `${selectedMilestones.size} Milestones Selected`;
+    return `${selectedIds.size} ${pluralText}`;
   };
 
   const houseTypes: { id: HouseType, label: string, bonusInfo: string }[] = [
@@ -224,6 +264,7 @@ const FCMDinnerCalc: React.FC = () => {
   const isLobbyistEnabled = selectedModules.has('LOBBYIST');
   const visibleHouseTypes = houseTypes.filter(house => house.id !== 'park' || isLobbyistEnabled);
   const gridColsClass = visibleHouseTypes.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2';
+  const visibleEmployees = EMPLOYEES.filter(emp => selectedEmployees.has(emp.id));
 
   return (
     <div className="flex-grow w-full flex flex-col items-center p-4 space-y-4 overflow-y-auto">
@@ -248,71 +289,40 @@ const FCMDinnerCalc: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 gap-4">
           <div ref={moduleDropdownRef} className="relative bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
-            <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">
-              Modules Used
-            </label>
-            <button
-              onClick={() => setIsModuleDropdownOpen(prev => !prev)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75"
-            >
-              <span className="truncate">{getSelectedModulesLabel()}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${isModuleDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {isModuleDropdownOpen && (
-              <div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600 max-h-48 overflow-y-auto">
-                {MODULES.map(module => (
-                  <label key={module.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedModules.has(module.id)}
-                      onChange={() => handleModuleToggle(module.id)}
-                      className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500"
-                    />
-                    <div className="ml-3">
-                      <p className="font-semibold">{module.label}</p>
-                      <p className="text-xs text-slate-400">{module.description}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            )}
+            <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">Modules Used</label>
+            <button onClick={() => setIsModuleDropdownOpen(p => !p)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(MODULES, selectedModules, 'Select Modules', 'Module', 'Modules Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isModuleDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
+            {isModuleDropdownOpen && (<div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600 max-h-48 overflow-y-auto">{MODULES.map(module => (<label key={module.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer"><input type="checkbox" checked={selectedModules.has(module.id)} onChange={() => handleModuleToggle(module.id)} className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500" /><div className="ml-3"><p className="font-semibold">{module.label}</p><p className="text-xs text-slate-400">{module.description}</p></div></label>))}</div>)}
           </div>
           <div ref={milestoneDropdownRef} className="relative bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
-            <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">
-              Milestones
-            </label>
-            <button
-              onClick={() => setIsMilestoneDropdownOpen(prev => !prev)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75"
-            >
-              <span className="truncate">{getSelectedMilestonesLabel()}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${isMilestoneDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {isMilestoneDropdownOpen && (
-              <div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600 max-h-48 overflow-y-auto">
-                {MILESTONES.map(milestone => (
-                  <label key={milestone.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedMilestones.has(milestone.id)}
-                      onChange={() => handleMilestoneToggle(milestone.id)}
-                      className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500"
-                    />
-                    <div className="ml-3">
-                      <p className="font-semibold">{milestone.label}</p>
-                      <p className="text-xs text-slate-400">{milestone.description}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            )}
+            <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">Milestones</label>
+            <button onClick={() => setIsMilestoneDropdownOpen(p => !p)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(MILESTONES, selectedMilestones, 'Select Milestones', 'Milestone', 'Milestones Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isMilestoneDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
+            {isMilestoneDropdownOpen && (<div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600 max-h-48 overflow-y-auto">{MILESTONES.map(milestone => (<label key={milestone.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer"><input type="checkbox" checked={selectedMilestones.has(milestone.id)} onChange={() => handleMilestoneToggle(milestone.id)} className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500" /><div className="ml-3"><p className="font-semibold">{milestone.label}</p><p className="text-xs text-slate-400">{milestone.description}</p></div></label>))}</div>)}
+          </div>
+          <div ref={employeeDropdownRef} className="relative bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
+            <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">Employees Working</label>
+            <button onClick={() => setIsEmployeeDropdownOpen(p => !p)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(EMPLOYEES, selectedEmployees, 'Select Employees', 'Employee', 'Employees Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isEmployeeDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
+            {isEmployeeDropdownOpen && (<div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600 max-h-48 overflow-y-auto">{EMPLOYEES.map(emp => (<label key={emp.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer"><input type="checkbox" checked={selectedEmployees.has(emp.id)} onChange={() => handleEmployeeToggle(emp.id)} className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500" /><div className="ml-3"><p className="font-semibold">{emp.label}</p><p className="text-xs text-slate-400">{emp.description}</p></div></label>))}</div>)}
           </div>
         </div>
       </div>
+
+      {visibleEmployees.length > 0 && (
+        <div className="w-full max-w-xl p-4 bg-slate-800 rounded-lg border border-slate-700 shadow-lg">
+          <h3 className="text-lg font-semibold text-slate-300 mb-3 text-center">Employee Counts</h3>
+          <div className="flex justify-center flex-wrap gap-4">
+            {visibleEmployees.map(emp => (
+              <div key={emp.id} className="flex flex-col items-center space-y-1 p-2 rounded-lg bg-slate-700/50 min-w-[180px]">
+                <p className="text-slate-300 text-sm font-semibold truncate" title={emp.label}>{emp.label}</p>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleEmployeeCountChange(emp.id as EmployeeType, -1)} className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none" aria-label={`Decrease ${emp.label}`}>-</button>
+                  <span className="text-2xl font-mono w-10 text-center select-none">{employeeCounts[emp.id as EmployeeType]}</span>
+                  <button onClick={() => handleEmployeeCountChange(emp.id as EmployeeType, 1)} className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none" aria-label={`Increase ${emp.label}`}>+</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <main className="w-full flex flex-col items-center">
         <div className={`grid grid-cols-1 ${gridColsClass} gap-4 w-full max-w-5xl`}>
@@ -328,19 +338,10 @@ const FCMDinnerCalc: React.FC = () => {
                   <FoodItemCounter label="Pizzas" type="pizzas" count={items[house.id].pizzas} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
                   <FoodItemCounter label="Burgers" type="burgers" count={items[house.id].burgers} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
                   <FoodItemCounter label="Drinks" type="drinks" count={items[house.id].drinks} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-
-                  {selectedModules.has('COFFEE') && (
-                    <FoodItemCounter label="Coffee" type="coffee" count={items[house.id].coffee} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-                  )}
-                  {selectedModules.has('NOODLES') && (
-                    <FoodItemCounter label="Noodles" type="noodles" count={items[house.id].noodles} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-                  )}
-                  {selectedModules.has('KIMCHI') && (
-                    <FoodItemCounter label="Kimchi" type="kimchi" count={items[house.id].kimchi} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-                  )}
-                  {selectedModules.has('SUSHI') && house.id !== 'base' && (
-                    <FoodItemCounter label="Sushi" type="sushi" count={items[house.id].sushi} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-                  )}
+                  {selectedModules.has('COFFEE') && (<FoodItemCounter label="Coffee" type="coffee" count={items[house.id].coffee} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />)}
+                  {selectedModules.has('NOODLES') && (<FoodItemCounter label="Noodles" type="noodles" count={items[house.id].noodles} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />)}
+                  {selectedModules.has('KIMCHI') && (<FoodItemCounter label="Kimchi" type="kimchi" count={items[house.id].kimchi} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />)}
+                  {selectedModules.has('SUSHI') && house.id !== 'base' && (<FoodItemCounter label="Sushi" type="sushi" count={items[house.id].sushi} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />)}
                 </div>
               </div>
 
