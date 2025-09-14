@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import MultiSelectModal from './MultiSelectModal';
+import ConfirmationModal from './ConfirmationModal';
 
 const MODULES = [
   { id: 'LOBBYIST', label: 'LOBBYIST - Add parks', description: 'Enables houses with parks (3x price).' },
@@ -42,6 +43,15 @@ interface FoodItems {
 type HouseType = 'base' | 'garden' | 'park';
 type EmployeeType = 'DISCOUNT' | 'PRICING' | 'WAITRESS' | 'FRY_CHEF';
 
+const initialFoodItemsState = { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 };
+const initialItemsState = {
+    base: { ...initialFoodItemsState },
+    garden: { ...initialFoodItemsState },
+    park: { ...initialFoodItemsState },
+};
+const initialEmployeeCountsState = { DISCOUNT: 0, PRICING: 0, WAITRESS: 0, FRY_CHEF: 0 };
+
+
 const FoodItemCounter: React.FC<{
   label: string,
   type: FoodType,
@@ -72,21 +82,19 @@ const FoodItemCounter: React.FC<{
 
 const FCMDinnerCalc: React.FC = () => {
   const [baseUnitPrice, setBaseUnitPrice] = useState(10);
-  const [items, setItems] = useState<Record<HouseType, FoodItems>>({
-    base: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
-    garden: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
-    park: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
-  });
+  const [items, setItems] = useState<Record<HouseType, FoodItems>>(initialItemsState);
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
   const [selectedMilestones, setSelectedMilestones] = useState<Set<string>>(new Set());
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
-  const [employeeCounts, setEmployeeCounts] = useState({ DISCOUNT: 0, PRICING: 0, WAITRESS: 0, FRY_CHEF: 0 });
+  const [employeeCounts, setEmployeeCounts] = useState(initialEmployeeCountsState);
   const [salariesCount, setSalariesCount] = useState(0);
 
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [isReserveModalOpen, setIsReserveModalOpen] = useState(false);
+  const [isResetDinnerConfirmOpen, setIsResetDinnerConfirmOpen] = useState(false);
+  const [isResetAllConfirmOpen, setIsResetAllConfirmOpen] = useState(false);
   
   useEffect(() => {
     const foodModuleMapping: { [key: string]: FoodType } = {
@@ -231,6 +239,30 @@ const FCMDinnerCalc: React.FC = () => {
     setIsReserveModalOpen(false);
   };
 
+  const handleResetDinner = () => {
+    setItems(initialItemsState);
+    setSelectedEmployees(new Set());
+    setEmployeeCounts(initialEmployeeCountsState);
+  };
+
+  const handleResetAll = () => {
+    handleResetDinner();
+    setSalariesCount(0);
+    setBaseUnitPrice(10);
+    setSelectedModules(new Set());
+    setSelectedMilestones(new Set());
+  };
+
+  const handleConfirmResetDinner = () => {
+    handleResetDinner();
+    setIsResetDinnerConfirmOpen(false);
+  };
+
+  const handleConfirmResetAll = () => {
+    handleResetAll();
+    setIsResetAllConfirmOpen(false);
+  };
+
   const { totals, grandTotal, effectiveUnitPrice, employeeDeduction, flatEmployeeBonus, waitressBonus, salariesCost, trainingDiscount, salaryPerEmployee } = useMemo(() => {
     const hasLowerPrices = selectedMilestones.has('LOWER_PRICES');
     const employeeDeduction = (employeeCounts.DISCOUNT * 1) + (employeeCounts.PRICING * 3);
@@ -326,7 +358,7 @@ const FCMDinnerCalc: React.FC = () => {
 
   return (
     <div className="flex-grow w-full flex flex-col items-center p-4 space-y-4 overflow-y-auto">
-      <h1 className="text-xl font-bold text-yellow-400 animate-pulse tracking-widest">WORK IN PROGRESS</h1>
+      <h1 className="text-3xl font-bold text-slate-100">Food Chain Magnate Calculator</h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full max-w-5xl mb-4 flex-shrink-0">
         <div className="grid grid-cols-2 gap-4">
             <button 
@@ -456,6 +488,21 @@ const FCMDinnerCalc: React.FC = () => {
         </div>
       </main>
 
+      <footer className="w-full max-w-5xl mt-4 flex items-center justify-center gap-4 flex-shrink-0">
+        <button
+          onClick={() => setIsResetAllConfirmOpen(true)}
+          className="px-6 py-2 bg-yellow-500/80 hover:bg-yellow-500 text-white font-semibold rounded-full shadow-lg transition-transform transform hover:scale-105"
+        >
+          Reset All
+        </button>
+        <button
+          onClick={() => setIsResetDinnerConfirmOpen(true)}
+          className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-full shadow-lg transition-transform transform hover:scale-105"
+        >
+          Reset Dinner
+        </button>
+      </footer>
+
       {isReserveModalOpen && (
         <div
           className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in"
@@ -527,6 +574,26 @@ const FCMDinnerCalc: React.FC = () => {
         options={availableEmployees}
         selectedIds={selectedEmployees}
         onToggle={handleEmployeeToggle}
+      />
+
+      <ConfirmationModal
+        isOpen={isResetDinnerConfirmOpen}
+        onClose={() => setIsResetDinnerConfirmOpen(false)}
+        onConfirm={handleConfirmResetDinner}
+        title="Reset Dinner"
+        message="Are you sure you want to reset all food items and employee selections for this turn?"
+        confirmButtonText="Reset Dinner"
+        confirmButtonClass="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-lg transition-colors"
+      />
+
+      <ConfirmationModal
+        isOpen={isResetAllConfirmOpen}
+        onClose={() => setIsResetAllConfirmOpen(false)}
+        onConfirm={handleConfirmResetAll}
+        title="Reset All"
+        message="Are you sure you want to reset the entire calculator to its default state? This will clear modules and milestones."
+        confirmButtonText="Reset All"
+        confirmButtonClass="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg transition-colors"
       />
 
     </div>
