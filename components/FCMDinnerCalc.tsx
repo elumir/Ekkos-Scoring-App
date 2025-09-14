@@ -2,6 +2,10 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 
 const MODULES = [
   { id: 'LOBBYIST', label: 'LOBBYIST - Add parks', description: 'Enables houses with parks (3x price).' },
+  { id: 'COFFEE', label: 'Coffee', description: 'Enables coffee.' },
+  { id: 'NOODLES', label: 'Noodles', description: 'Enables noodles.' },
+  { id: 'KIMCHI', label: 'Kimchi', description: 'Enables kimchi.' },
+  { id: 'SUSHI', label: 'Sushi', description: 'Enables sushi.' },
 ];
 
 const MILESTONES = [
@@ -84,13 +88,41 @@ const FCMDinnerCalc: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // When Lobbyist is disabled, reset the park items to 0
-    if (!selectedModules.has('LOBBYIST')) {
-      setItems(prev => ({
-        ...prev,
-        park: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
-      }));
-    }
+    const foodModuleMapping: { [key: string]: FoodType } = {
+        COFFEE: 'coffee',
+        NOODLES: 'noodles',
+        KIMCHI: 'kimchi',
+        SUSHI: 'sushi',
+    };
+
+    setItems(currentItems => {
+        let itemsChanged = false;
+        // FIX: Operator '>' cannot be applied to types 'unknown' and 'number'. By typing the result of JSON.parse, we ensure type safety.
+        const newItems: Record<HouseType, FoodItems> = JSON.parse(JSON.stringify(currentItems));
+
+        // When Lobbyist is disabled, reset the park items to 0
+        if (!selectedModules.has('LOBBYIST')) {
+            const parkItems = newItems.park;
+            if (Object.values(parkItems).some(count => count > 0)) {
+                newItems.park = { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 };
+                itemsChanged = true;
+            }
+        }
+
+        // When a food module is disabled, reset its items to 0
+        Object.entries(foodModuleMapping).forEach(([moduleId, foodType]) => {
+            if (!selectedModules.has(moduleId)) {
+                if (newItems.base[foodType] > 0 || newItems.garden[foodType] > 0 || newItems.park[foodType] > 0) {
+                    newItems.base[foodType] = 0;
+                    newItems.garden[foodType] = 0;
+                    newItems.park[foodType] = 0;
+                    itemsChanged = true;
+                }
+            }
+        });
+        
+        return itemsChanged ? newItems : currentItems;
+    });
   }, [selectedModules]);
 
   const handleItemChange = (houseType: HouseType, foodType: FoodType, change: number) => {
@@ -229,7 +261,7 @@ const FCMDinnerCalc: React.FC = () => {
               </svg>
             </button>
             {isModuleDropdownOpen && (
-              <div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600">
+              <div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600 max-h-48 overflow-y-auto">
                 {MODULES.map(module => (
                   <label key={module.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer">
                     <input
@@ -296,10 +328,17 @@ const FCMDinnerCalc: React.FC = () => {
                   <FoodItemCounter label="Pizzas" type="pizzas" count={items[house.id].pizzas} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
                   <FoodItemCounter label="Burgers" type="burgers" count={items[house.id].burgers} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
                   <FoodItemCounter label="Drinks" type="drinks" count={items[house.id].drinks} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-                  <FoodItemCounter label="Coffee" type="coffee" count={items[house.id].coffee} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-                  <FoodItemCounter label="Noodles" type="noodles" count={items[house.id].noodles} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-                  <FoodItemCounter label="Kimchi" type="kimchi" count={items[house.id].kimchi} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-                  {house.id !== 'base' && (
+
+                  {selectedModules.has('COFFEE') && (
+                    <FoodItemCounter label="Coffee" type="coffee" count={items[house.id].coffee} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+                  )}
+                  {selectedModules.has('NOODLES') && (
+                    <FoodItemCounter label="Noodles" type="noodles" count={items[house.id].noodles} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+                  )}
+                  {selectedModules.has('KIMCHI') && (
+                    <FoodItemCounter label="Kimchi" type="kimchi" count={items[house.id].kimchi} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+                  )}
+                  {selectedModules.has('SUSHI') && house.id !== 'base' && (
                     <FoodItemCounter label="Sushi" type="sushi" count={items[house.id].sushi} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
                   )}
                 </div>
