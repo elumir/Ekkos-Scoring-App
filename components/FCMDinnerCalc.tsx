@@ -1,5 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 
+const MODULES = [
+  { id: 'LOBBYIST', label: 'LOBBYIST - Add parks', description: 'Enables houses with parks (3x price).' },
+];
+
 const MILESTONES = [
   { id: 'LOWER_PRICES', label: 'First to Lower Prices', description: '-$1 to unit price' },
   { id: 'PIZZA_MARKETED', label: 'First Pizza Marketed', description: '+$5 bonus per pizza' },
@@ -51,12 +55,18 @@ const FCMDinnerCalc: React.FC = () => {
     garden: { pizzas: 0, burgers: 0, drinks: 0 },
     park: { pizzas: 0, burgers: 0, drinks: 0 },
   });
+  const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
   const [selectedMilestones, setSelectedMilestones] = useState<Set<string>>(new Set());
+  const [isModuleDropdownOpen, setIsModuleDropdownOpen] = useState(false);
   const [isMilestoneDropdownOpen, setIsMilestoneDropdownOpen] = useState(false);
+  const moduleDropdownRef = useRef<HTMLDivElement>(null);
   const milestoneDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (moduleDropdownRef.current && !moduleDropdownRef.current.contains(event.target as Node)) {
+        setIsModuleDropdownOpen(false);
+      }
       if (milestoneDropdownRef.current && !milestoneDropdownRef.current.contains(event.target as Node)) {
         setIsMilestoneDropdownOpen(false);
       }
@@ -69,6 +79,16 @@ const FCMDinnerCalc: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    // When Lobbyist is disabled, reset the park items to 0
+    if (!selectedModules.has('LOBBYIST')) {
+      setItems(prev => ({
+        ...prev,
+        park: { pizzas: 0, burgers: 0, drinks: 0 },
+      }));
+    }
+  }, [selectedModules]);
+
   const handleItemChange = (houseType: HouseType, foodType: FoodType, change: number) => {
     setItems(prev => ({
       ...prev,
@@ -77,6 +97,18 @@ const FCMDinnerCalc: React.FC = () => {
         [foodType]: Math.max(0, prev[houseType][foodType] + change)
       }
     }));
+  };
+
+  const handleModuleToggle = (moduleId: string) => {
+    setSelectedModules(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(moduleId)) {
+        newSet.delete(moduleId);
+      } else {
+        newSet.add(moduleId);
+      }
+      return newSet;
+    });
   };
 
   const handleMilestoneToggle = (milestoneId: string) => {
@@ -105,9 +137,10 @@ const FCMDinnerCalc: React.FC = () => {
       return pizzaTotal + burgerTotal + drinkTotal;
     };
 
+    const isLobbyistEnabled = selectedModules.has('LOBBYIST');
     const baseTotal = calculateSubtotal(items.base, 1);
     const gardenTotal = calculateSubtotal(items.garden, 2);
-    const parkTotal = calculateSubtotal(items.park, 3);
+    const parkTotal = isLobbyistEnabled ? calculateSubtotal(items.park, 3) : 0;
 
     const preBonusTotal = baseTotal + gardenTotal + parkTotal;
     const has100Milestone = selectedMilestones.has('HAVE_100');
@@ -122,7 +155,16 @@ const FCMDinnerCalc: React.FC = () => {
       grandTotal: finalGrandTotal,
       effectiveUnitPrice,
     };
-  }, [items, baseUnitPrice, selectedMilestones]);
+  }, [items, baseUnitPrice, selectedMilestones, selectedModules]);
+
+  const getSelectedModulesLabel = () => {
+    if (selectedModules.size === 0) return 'Select Modules';
+    if (selectedModules.size === 1) {
+      const id = selectedModules.values().next().value;
+      return MODULES.find(m => m.id === id)?.label || 'Select Modules';
+    }
+    return `${selectedModules.size} Modules Selected`;
+  };
 
   const getSelectedMilestonesLabel = () => {
     if (selectedMilestones.size === 0) return 'Select Milestones';
@@ -135,9 +177,13 @@ const FCMDinnerCalc: React.FC = () => {
 
   const houseTypes: { id: HouseType, label: string, bonusInfo: string }[] = [
     { id: 'base', label: 'Base House', bonusInfo: '1x Price' },
-    { id: 'garden', label: 'House + Garden', bonusInfo: '2x Price' },
+    { id: 'garden', label: 'House + (Garden / Park)', bonusInfo: '2x Price' },
     { id: 'park', label: 'House, Garden, & Park', bonusInfo: '3x Price' },
   ];
+
+  const isLobbyistEnabled = selectedModules.has('LOBBYIST');
+  const visibleHouseTypes = houseTypes.filter(house => house.id !== 'park' || isLobbyistEnabled);
+  const gridColsClass = visibleHouseTypes.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2';
 
   return (
     <div className="flex-grow w-full flex flex-col items-center p-4 space-y-4 overflow-y-auto">
@@ -160,43 +206,77 @@ const FCMDinnerCalc: React.FC = () => {
           </div>
           <p className="text-center text-sm text-sky-400 mt-2">Effective Price: ${effectiveUnitPrice}</p>
         </div>
-        <div ref={milestoneDropdownRef} className="relative bg-slate-800 p-4 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
-          <label className="block text-lg font-semibold text-slate-300 mb-2 text-center">
-            Milestones
-          </label>
-          <button
-            onClick={() => setIsMilestoneDropdownOpen(prev => !prev)}
-            className="w-full flex items-center justify-between gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75"
-          >
-            <span className="truncate">{getSelectedMilestonesLabel()}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${isMilestoneDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {isMilestoneDropdownOpen && (
-            <div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600">
-              {MILESTONES.map(milestone => (
-                <label key={milestone.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedMilestones.has(milestone.id)}
-                    onChange={() => handleMilestoneToggle(milestone.id)}
-                    className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500"
-                  />
-                  <div className="ml-3">
-                    <p className="font-semibold">{milestone.label}</p>
-                    <p className="text-xs text-slate-400">{milestone.description}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          )}
+        <div className="grid grid-cols-1 gap-4">
+          <div ref={moduleDropdownRef} className="relative bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
+            <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">
+              Modules Used
+            </label>
+            <button
+              onClick={() => setIsModuleDropdownOpen(prev => !prev)}
+              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75"
+            >
+              <span className="truncate">{getSelectedModulesLabel()}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${isModuleDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isModuleDropdownOpen && (
+              <div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600">
+                {MODULES.map(module => (
+                  <label key={module.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedModules.has(module.id)}
+                      onChange={() => handleModuleToggle(module.id)}
+                      className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500"
+                    />
+                    <div className="ml-3">
+                      <p className="font-semibold">{module.label}</p>
+                      <p className="text-xs text-slate-400">{module.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+          <div ref={milestoneDropdownRef} className="relative bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
+            <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">
+              Milestones
+            </label>
+            <button
+              onClick={() => setIsMilestoneDropdownOpen(prev => !prev)}
+              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75"
+            >
+              <span className="truncate">{getSelectedMilestonesLabel()}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${isMilestoneDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isMilestoneDropdownOpen && (
+              <div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600 max-h-48 overflow-y-auto">
+                {MILESTONES.map(milestone => (
+                  <label key={milestone.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedMilestones.has(milestone.id)}
+                      onChange={() => handleMilestoneToggle(milestone.id)}
+                      className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500"
+                    />
+                    <div className="ml-3">
+                      <p className="font-semibold">{milestone.label}</p>
+                      <p className="text-xs text-slate-400">{milestone.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       <main className="w-full flex flex-col items-center">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full max-w-5xl">
-          {houseTypes.map(house => (
+        <div className={`grid grid-cols-1 ${gridColsClass} gap-4 w-full max-w-5xl`}>
+          {visibleHouseTypes.map(house => (
             <div key={house.id} className="w-full flex-shrink-0 bg-slate-800 rounded-lg flex flex-col border border-slate-700 shadow-lg">
               <div className="p-3 text-center border-b-2 border-slate-600 h-16 flex flex-col items-center justify-center">
                 <h2 className="text-lg font-bold truncate">{house.label}</h2>
