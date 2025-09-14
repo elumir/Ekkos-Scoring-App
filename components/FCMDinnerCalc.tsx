@@ -135,9 +135,9 @@ const FCMDinnerCalc: React.FC = () => {
   ];
 
   return (
-    <div className="flex-grow w-full flex flex-col items-center p-4 space-y-4">
+    <div className="flex-grow w-full flex flex-col items-center p-4 space-y-4 overflow-y-auto">
       <h1 className="text-xl font-bold text-yellow-400 animate-pulse tracking-widest">WORK IN PROGRESS</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-xl mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-xl mb-4 flex-shrink-0">
         <div className="bg-slate-800 p-4 rounded-lg w-full border border-slate-700 shadow-lg">
           <label htmlFor="unitPrice" className="block text-lg font-semibold text-slate-300 mb-2 text-center">
             Base Unit Price
@@ -189,7 +189,7 @@ const FCMDinnerCalc: React.FC = () => {
         </div>
       </div>
 
-      <main className="w-full flex-grow flex flex-col items-center">
+      <main className="w-full flex flex-col items-center">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full max-w-5xl">
           {houseTypes.map(house => (
             <div key={house.id} className="w-full flex-shrink-0 bg-slate-800 rounded-lg flex flex-col border border-slate-700 shadow-lg">
@@ -211,7 +211,7 @@ const FCMDinnerCalc: React.FC = () => {
             </div>
           ))}
         </div>
-        <div className="w-full max-w-5xl mt-6 p-4 bg-slate-800 border border-sky-500 rounded-lg shadow-lg flex items-center justify-between">
+        <div className="w-full max-w-5xl mt-6 p-4 bg-slate-800 border border-sky-500 rounded-lg shadow-lg flex items-center justify-between flex-shrink-0">
             <h2 className="text-2xl font-bold">Total Revenue</h2>
             <p className="text-5xl font-bold font-mono text-sky-400">${grandTotal}</p>
         </div>
