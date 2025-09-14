@@ -14,6 +14,8 @@ const MILESTONES = [
   { id: 'BURGER_MARKETED', label: 'First Burger Marketed', description: '+$5 bonus per burger' },
   { id: 'DRINK_MARKETED', label: 'First Drink Marketed', description: '+$5 bonus per drink' },
   { id: 'FIRST_WAITRESS', label: 'First Waitress Played', description: '+$2 bonus per waitress' },
+  { id: 'FIRST_WAITRESS_USED', label: 'First Waitress Used', description: 'Reduces salaries to $3 each' },
+  { id: 'FIRST_TO_TRAIN', label: 'First to Train Someone', description: 'First $15 of salaries do not count.' },
   { id: 'HAVE_100', label: 'First to Have $100', description: '+50% to cash earned' },
 ];
 
@@ -67,7 +69,7 @@ const FoodItemCounter: React.FC<{
 );
 
 const FCMDinnerCalc: React.FC = () => {
-  const baseUnitPrice = 10;
+  const [baseUnitPrice, setBaseUnitPrice] = useState(10);
   const [items, setItems] = useState<Record<HouseType, FoodItems>>({
     base: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
     garden: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
@@ -77,10 +79,12 @@ const FCMDinnerCalc: React.FC = () => {
   const [selectedMilestones, setSelectedMilestones] = useState<Set<string>>(new Set());
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [employeeCounts, setEmployeeCounts] = useState({ DISCOUNT: 0, PRICING: 0, WAITRESS: 0, FRY_CHEF: 0 });
+  const [salariesCount, setSalariesCount] = useState(0);
 
   const [isModuleDropdownOpen, setIsModuleDropdownOpen] = useState(false);
   const [isMilestoneDropdownOpen, setIsMilestoneDropdownOpen] = useState(false);
   const [isEmployeeDropdownOpen, setIsEmployeeDropdownOpen] = useState(false);
+  const [isReserveModalOpen, setIsReserveModalOpen] = useState(false);
   
   const moduleDropdownRef = useRef<HTMLDivElement>(null);
   const milestoneDropdownRef = useRef<HTMLDivElement>(null);
@@ -227,7 +231,16 @@ const FCMDinnerCalc: React.FC = () => {
     }));
   };
 
-  const { totals, grandTotal, effectiveUnitPrice, employeeDeduction, flatEmployeeBonus, waitressBonus } = useMemo(() => {
+  const handleSalariesChange = (change: number) => {
+    setSalariesCount(prev => Math.max(0, prev + change));
+  };
+
+  const handleReserveSelect = (price: number) => {
+    setBaseUnitPrice(price);
+    setIsReserveModalOpen(false);
+  };
+
+  const { totals, grandTotal, effectiveUnitPrice, employeeDeduction, flatEmployeeBonus, waitressBonus, salariesCost, trainingDiscount, salaryPerEmployee } = useMemo(() => {
     const hasLowerPrices = selectedMilestones.has('LOWER_PRICES');
     const employeeDeduction = (employeeCounts.DISCOUNT * 1) + (employeeCounts.PRICING * 3);
     const luxuryBonus = selectedEmployees.has('LUXURY_MANAGER') ? 10 : 0;
@@ -257,8 +270,19 @@ const FCMDinnerCalc: React.FC = () => {
     const parkTotal = isLobbyistEnabled ? calculateSubtotal(items.park, 3) : 0;
 
     const preBonusTotal = baseTotal + gardenTotal + parkTotal + flatEmployeeBonus;
+    
+    const hasFirstWaitressUsed = selectedMilestones.has('FIRST_WAITRESS_USED');
+    const salaryPerEmployee = hasFirstWaitressUsed ? 3 : 5;
+    const salariesCost = salariesCount * salaryPerEmployee;
+
+    const hasFirstToTrain = selectedMilestones.has('FIRST_TO_TRAIN');
+    const trainingDiscount = hasFirstToTrain ? Math.min(salariesCost, 15) : 0;
+    const netSalariesCost = salariesCost - trainingDiscount;
+
+    const totalAfterSalaries = preBonusTotal - netSalariesCost;
+    
     const has100Milestone = selectedMilestones.has('HAVE_100');
-    const finalGrandTotal = has100Milestone ? Math.floor(preBonusTotal * 1.5) : preBonusTotal;
+    const finalGrandTotal = has100Milestone ? Math.floor(totalAfterSalaries * 1.5) : totalAfterSalaries;
 
     return {
       totals: {
@@ -271,8 +295,11 @@ const FCMDinnerCalc: React.FC = () => {
       employeeDeduction,
       flatEmployeeBonus,
       waitressBonus,
+      salariesCost,
+      trainingDiscount,
+      salaryPerEmployee,
     };
-  }, [items, selectedMilestones, selectedModules, employeeCounts, selectedEmployees]);
+  }, [items, selectedMilestones, selectedModules, employeeCounts, selectedEmployees, baseUnitPrice, salariesCount]);
 
   const getSelectedLabel = (items: any[], selectedIds: Set<string>, defaultText: string, singularText: string, pluralText: string) => {
     if (selectedIds.size === 0) return defaultText;
@@ -302,10 +329,15 @@ const FCMDinnerCalc: React.FC = () => {
       <h1 className="text-xl font-bold text-yellow-400 animate-pulse tracking-widest">WORK IN PROGRESS</h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full max-w-5xl mb-4 flex-shrink-0">
         <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-800 p-4 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col items-center justify-center">
-                <label className="block text-base font-semibold text-slate-300 mb-1 text-center">
+            <button 
+                onClick={() => setIsReserveModalOpen(true)}
+                className="bg-slate-800 p-4 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col items-center justify-center text-left hover:bg-slate-700/50 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500"
+                aria-label="Change base unit price"
+              >
+                <label className="block text-base font-semibold text-slate-300 text-center cursor-pointer">
                     Effective Unit Price
                 </label>
+                <p className="text-xs text-slate-500 mb-1">(Click for Reserve)</p>
                 <p className="text-5xl font-mono text-sky-400 font-bold">${effectiveUnitPrice}</p>
                 <p className="text-center text-xs text-slate-400 mt-1 space-x-2">
                   <span>Base: ${baseUnitPrice}</span>
@@ -313,7 +345,7 @@ const FCMDinnerCalc: React.FC = () => {
                   {selectedMilestones.has('LOWER_PRICES') && <span className="text-red-400"> -${1}</span>}
                   {employeeDeduction > 0 && <span className="text-red-400"> -${employeeDeduction}</span>}
                 </p>
-            </div>
+            </button>
             <div className="bg-slate-800 p-4 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col items-center justify-center">
                 <label className="block text-base font-semibold text-slate-300 mb-1 text-center">
                     Flat Employee Bonus
@@ -392,11 +424,86 @@ const FCMDinnerCalc: React.FC = () => {
             </div>
           ))}
         </div>
-        <div className="w-full max-w-5xl mt-6 p-4 bg-slate-800 border border-sky-500 rounded-lg shadow-lg flex items-center justify-between flex-shrink-0">
+
+        <div className="w-full max-w-5xl mt-6 p-4 bg-slate-800 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center gap-2">
+          <h3 className="text-lg font-semibold text-slate-300">Salaries</h3>
+          <div className="flex flex-col items-center space-y-1 p-2 rounded-lg bg-slate-700/50 min-w-[240px]">
+            <p className="text-slate-300 text-sm font-semibold">Number of Employees to Pay (${salaryPerEmployee} each)</p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleSalariesChange(-1)}
+                className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none"
+                aria-label="Decrease Salaries"
+              >
+                -
+              </button>
+              <span className="text-2xl font-mono w-10 text-center select-none">{salariesCount}</span>
+              <button
+                onClick={() => handleSalariesChange(1)}
+                className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none"
+                aria-label="Increase Salaries"
+              >
+                +
+              </button>
+            </div>
+            <p className="text-sm text-red-400 font-mono">Total Salary Cost: -${salariesCost}</p>
+            {trainingDiscount > 0 && (
+              <p className="text-sm text-green-400 font-mono">'First to Train' Discount: +${trainingDiscount}</p>
+            )}
+          </div>
+        </div>
+        
+        <div className="w-full max-w-5xl mt-2 p-4 bg-slate-800 border border-sky-500 rounded-lg shadow-lg flex items-center justify-between flex-shrink-0">
             <h2 className="text-xl font-bold">Total Revenue</h2>
             <p className="text-4xl font-bold font-mono text-sky-400">${grandTotal}</p>
         </div>
       </main>
+
+      {isReserveModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in"
+          onClick={() => setIsReserveModalOpen(false)}
+        >
+          <div
+            className="bg-slate-800 rounded-lg shadow-xl p-6 m-4 w-full max-w-sm border border-slate-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-white">Reserve Card</h2>
+              <button
+                onClick={() => setIsReserveModalOpen(false)}
+                className="p-1 text-slate-400 hover:text-white"
+                aria-label="Close"
+              >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+              </button>
+            </div>
+            <p className="text-slate-300 mb-6">Select a unit price from the reserve card.</p>
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={() => handleReserveSelect(5)}
+                className="w-full px-4 py-3 bg-sky-600 rounded text-white font-semibold hover:bg-sky-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"
+              >
+                $5 Unit Price
+              </button>
+              <button
+                onClick={() => handleReserveSelect(10)}
+                className="w-full px-4 py-3 bg-sky-600 rounded text-white font-semibold hover:bg-sky-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"
+              >
+                $10 Unit Price
+              </button>
+              <button
+                onClick={() => handleReserveSelect(20)}
+                className="w-full px-4 py-3 bg-sky-600 rounded text-white font-semibold hover:bg-sky-500 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"
+              >
+                $20 Unit Price
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
