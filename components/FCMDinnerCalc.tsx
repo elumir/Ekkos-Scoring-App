@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import MultiSelectModal from './MultiSelectModal';
 
 const MODULES = [
   { id: 'LOBBYIST', label: 'LOBBYIST - Add parks', description: 'Enables houses with parks (3x price).' },
@@ -81,35 +82,11 @@ const FCMDinnerCalc: React.FC = () => {
   const [employeeCounts, setEmployeeCounts] = useState({ DISCOUNT: 0, PRICING: 0, WAITRESS: 0, FRY_CHEF: 0 });
   const [salariesCount, setSalariesCount] = useState(0);
 
-  const [isModuleDropdownOpen, setIsModuleDropdownOpen] = useState(false);
-  const [isMilestoneDropdownOpen, setIsMilestoneDropdownOpen] = useState(false);
-  const [isEmployeeDropdownOpen, setIsEmployeeDropdownOpen] = useState(false);
+  const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
+  const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
+  const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [isReserveModalOpen, setIsReserveModalOpen] = useState(false);
   
-  const moduleDropdownRef = useRef<HTMLDivElement>(null);
-  const milestoneDropdownRef = useRef<HTMLDivElement>(null);
-  const employeeDropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (moduleDropdownRef.current && !moduleDropdownRef.current.contains(event.target as Node)) {
-        setIsModuleDropdownOpen(false);
-      }
-      if (milestoneDropdownRef.current && !milestoneDropdownRef.current.contains(event.target as Node)) {
-        setIsMilestoneDropdownOpen(false);
-      }
-      if (employeeDropdownRef.current && !employeeDropdownRef.current.contains(event.target as Node)) {
-        setIsEmployeeDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, []);
-
   useEffect(() => {
     const foodModuleMapping: { [key: string]: FoodType } = {
         COFFEE: 'coffee',
@@ -358,20 +335,17 @@ const FCMDinnerCalc: React.FC = () => {
             </div>
         </div>
         <div className="grid grid-cols-1 gap-4">
-          <div ref={moduleDropdownRef} className="relative bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
+          <div className="bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
             <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">Modules Used</label>
-            <button onClick={() => setIsModuleDropdownOpen(p => !p)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(MODULES, selectedModules, 'Select Modules', 'Module', 'Modules Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isModuleDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
-            {isModuleDropdownOpen && (<div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600 max-h-48 overflow-y-auto">{MODULES.map(module => (<label key={module.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer"><input type="checkbox" checked={selectedModules.has(module.id)} onChange={() => handleModuleToggle(module.id)} className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500" /><div className="ml-3"><p className="font-semibold">{module.label}</p><p className="text-xs text-slate-400">{module.description}</p></div></label>))}</div>)}
+            <button onClick={() => setIsModuleModalOpen(true)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(MODULES, selectedModules, 'Select Modules', 'Module', 'Modules Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
           </div>
-          <div ref={milestoneDropdownRef} className="relative bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
+          <div className="bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
             <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">Milestones</label>
-            <button onClick={() => setIsMilestoneDropdownOpen(p => !p)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(MILESTONES, selectedMilestones, 'Select Milestones', 'Milestone', 'Milestones Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isMilestoneDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
-            {isMilestoneDropdownOpen && (<div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600 max-h-48 overflow-y-auto">{MILESTONES.map(milestone => (<label key={milestone.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer"><input type="checkbox" checked={selectedMilestones.has(milestone.id)} onChange={() => handleMilestoneToggle(milestone.id)} className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500" /><div className="ml-3"><p className="font-semibold">{milestone.label}</p><p className="text-xs text-slate-400">{milestone.description}</p></div></label>))}</div>)}
+            <button onClick={() => setIsMilestoneModalOpen(true)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(MILESTONES, selectedMilestones, 'Select Milestones', 'Milestone', 'Milestones Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
           </div>
-          <div ref={employeeDropdownRef} className="relative bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
+          <div className="bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
             <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">Employees Working</label>
-            <button onClick={() => setIsEmployeeDropdownOpen(p => !p)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(EMPLOYEES, selectedEmployees, 'Select Employees', 'Employee', 'Employees Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${isEmployeeDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
-            {isEmployeeDropdownOpen && (<div className="absolute top-full right-0 mt-2 w-full bg-slate-700 rounded-md shadow-lg z-50 overflow-hidden border border-slate-600 max-h-48 overflow-y-auto">{EMPLOYEES.map(emp => (<label key={emp.id} className="flex items-center w-full text-left px-4 py-3 text-sm transition-colors text-slate-200 hover:bg-slate-600 cursor-pointer"><input type="checkbox" checked={selectedEmployees.has(emp.id)} onChange={() => handleEmployeeToggle(emp.id)} className="h-4 w-4 rounded bg-slate-800 border-slate-500 text-sky-500 focus:ring-sky-500" /><div className="ml-3"><p className="font-semibold">{emp.label}</p><p className="text-xs text-slate-400">{emp.description}</p></div></label>))}</div>)}
+            <button onClick={() => setIsEmployeeModalOpen(true)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(EMPLOYEES, selectedEmployees, 'Select Employees', 'Employee', 'Employees Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
           </div>
         </div>
       </div>
@@ -504,6 +478,34 @@ const FCMDinnerCalc: React.FC = () => {
           </div>
         </div>
       )}
+
+      <MultiSelectModal
+        isOpen={isModuleModalOpen}
+        onClose={() => setIsModuleModalOpen(false)}
+        title="Select Modules"
+        options={MODULES}
+        selectedIds={selectedModules}
+        onToggle={handleModuleToggle}
+      />
+
+      <MultiSelectModal
+        isOpen={isMilestoneModalOpen}
+        onClose={() => setIsMilestoneModalOpen(false)}
+        title="Select Milestones"
+        options={MILESTONES}
+        selectedIds={selectedMilestones}
+        onToggle={handleMilestoneToggle}
+      />
+      
+      <MultiSelectModal
+        isOpen={isEmployeeModalOpen}
+        onClose={() => setIsEmployeeModalOpen(false)}
+        title="Select Employees"
+        options={EMPLOYEES}
+        selectedIds={selectedEmployees}
+        onToggle={handleEmployeeToggle}
+      />
+
     </div>
   );
 };
