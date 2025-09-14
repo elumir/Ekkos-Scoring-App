@@ -12,11 +12,15 @@ const MILESTONES = [
   { id: 'HAVE_100', label: 'First to Have $100', description: '+50% to cash earned' },
 ];
 
-type FoodType = 'pizzas' | 'burgers' | 'drinks';
+type FoodType = 'pizzas' | 'burgers' | 'drinks' | 'coffee' | 'noodles' | 'kimchi' | 'sushi';
 interface FoodItems {
   pizzas: number;
   burgers: number;
   drinks: number;
+  coffee: number;
+  noodles: number;
+  kimchi: number;
+  sushi: number;
 }
 type HouseType = 'base' | 'garden' | 'park';
 
@@ -26,7 +30,7 @@ const FoodItemCounter: React.FC<{
   count: number,
   onItemChange: (type: FoodType, change: number) => void
 }> = ({ label, type, count, onItemChange }) => (
-  <div className="flex flex-col items-center space-y-1 p-1 rounded-lg bg-slate-700/50 w-full">
+  <div className="flex flex-col items-center space-y-1 p-1 rounded-lg bg-slate-700/50">
     <p className="text-slate-300 text-xs font-semibold">{label}</p>
     <div className="flex items-center gap-1">
       <button
@@ -51,9 +55,9 @@ const FoodItemCounter: React.FC<{
 const FCMDinnerCalc: React.FC = () => {
   const [baseUnitPrice, setBaseUnitPrice] = useState<number>(10);
   const [items, setItems] = useState<Record<HouseType, FoodItems>>({
-    base: { pizzas: 0, burgers: 0, drinks: 0 },
-    garden: { pizzas: 0, burgers: 0, drinks: 0 },
-    park: { pizzas: 0, burgers: 0, drinks: 0 },
+    base: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
+    garden: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
+    park: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
   });
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
   const [selectedMilestones, setSelectedMilestones] = useState<Set<string>>(new Set());
@@ -84,7 +88,7 @@ const FCMDinnerCalc: React.FC = () => {
     if (!selectedModules.has('LOBBYIST')) {
       setItems(prev => ({
         ...prev,
-        park: { pizzas: 0, burgers: 0, drinks: 0 },
+        park: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
       }));
     }
   }, [selectedModules]);
@@ -134,7 +138,11 @@ const FCMDinnerCalc: React.FC = () => {
       const pizzaTotal = foodItems.pizzas * (effectiveUnitPrice * priceMultiplier + pizzaBonus);
       const burgerTotal = foodItems.burgers * (effectiveUnitPrice * priceMultiplier + burgerBonus);
       const drinkTotal = foodItems.drinks * (effectiveUnitPrice * priceMultiplier + drinkBonus);
-      return pizzaTotal + burgerTotal + drinkTotal;
+      const coffeeTotal = foodItems.coffee * (effectiveUnitPrice * priceMultiplier);
+      const noodlesTotal = foodItems.noodles * (effectiveUnitPrice * priceMultiplier);
+      const kimchiTotal = foodItems.kimchi * (effectiveUnitPrice * priceMultiplier);
+      const sushiTotal = foodItems.sushi * (effectiveUnitPrice * priceMultiplier);
+      return pizzaTotal + burgerTotal + drinkTotal + coffeeTotal + noodlesTotal + kimchiTotal + sushiTotal;
     };
 
     const isLobbyistEnabled = selectedModules.has('LOBBYIST');
@@ -283,10 +291,18 @@ const FCMDinnerCalc: React.FC = () => {
                 <p className="text-xs text-slate-400">{house.bonusInfo}</p>
               </div>
               
-              <div className="flex-grow flex items-center justify-center p-2 gap-2">
-                <FoodItemCounter label="Pizzas" type="pizzas" count={items[house.id].pizzas} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-                <FoodItemCounter label="Burgers" type="burgers" count={items[house.id].burgers} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
-                <FoodItemCounter label="Drinks" type="drinks" count={items[house.id].drinks} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+              <div className="flex-grow p-2">
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                  <FoodItemCounter label="Pizzas" type="pizzas" count={items[house.id].pizzas} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+                  <FoodItemCounter label="Burgers" type="burgers" count={items[house.id].burgers} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+                  <FoodItemCounter label="Drinks" type="drinks" count={items[house.id].drinks} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+                  <FoodItemCounter label="Coffee" type="coffee" count={items[house.id].coffee} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+                  <FoodItemCounter label="Noodles" type="noodles" count={items[house.id].noodles} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+                  <FoodItemCounter label="Kimchi" type="kimchi" count={items[house.id].kimchi} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+                  {house.id !== 'base' && (
+                    <FoodItemCounter label="Sushi" type="sushi" count={items[house.id].sushi} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
+                  )}
+                </div>
               </div>
 
               <div className="p-4 text-center border-t-2 border-slate-700 bg-black/20">
