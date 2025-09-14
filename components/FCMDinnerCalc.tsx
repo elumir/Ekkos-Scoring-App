@@ -5,6 +5,7 @@ const MILESTONES = [
   { id: 'PIZZA_MARKETED', label: 'First Pizza Marketed', description: '+$5 bonus per pizza' },
   { id: 'BURGER_MARKETED', label: 'First Burger Marketed', description: '+$5 bonus per burger' },
   { id: 'DRINK_MARKETED', label: 'First Drink Marketed', description: '+$5 bonus per drink' },
+  { id: 'HAVE_100', label: 'First to Have $100', description: '+50% to cash earned' },
 ];
 
 type FoodType = 'pizzas' | 'burgers' | 'drinks';
@@ -21,20 +22,20 @@ const FoodItemCounter: React.FC<{
   count: number,
   onItemChange: (type: FoodType, change: number) => void
 }> = ({ label, type, count, onItemChange }) => (
-  <div className="flex flex-col items-center space-y-2 p-2 rounded-lg bg-slate-700/50 w-full">
-    <p className="text-slate-300 text-sm font-semibold">{label}</p>
-    <div className="flex items-center gap-3">
+  <div className="flex flex-col items-center space-y-1 p-1 rounded-lg bg-slate-700/50 w-full">
+    <p className="text-slate-300 text-xs font-semibold">{label}</p>
+    <div className="flex items-center gap-1">
       <button
         onClick={() => onItemChange(type, -1)}
-        className="w-8 h-8 text-xl rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none"
+        className="w-6 h-6 text-base rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none"
         aria-label={`Decrease ${label}`}
       >
         -
       </button>
-      <span className="text-3xl font-mono w-12 text-center select-none">{count}</span>
+      <span className="text-xl font-mono w-8 text-center select-none">{count}</span>
       <button
         onClick={() => onItemChange(type, 1)}
-        className="w-8 h-8 text-xl rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none"
+        className="w-6 h-6 text-base rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none"
         aria-label={`Increase ${label}`}
       >
         +
@@ -108,13 +109,17 @@ const FCMDinnerCalc: React.FC = () => {
     const gardenTotal = calculateSubtotal(items.garden, 2);
     const parkTotal = calculateSubtotal(items.park, 3);
 
+    const preBonusTotal = baseTotal + gardenTotal + parkTotal;
+    const has100Milestone = selectedMilestones.has('HAVE_100');
+    const finalGrandTotal = has100Milestone ? Math.floor(preBonusTotal * 1.5) : preBonusTotal;
+
     return {
       totals: {
         base: baseTotal,
         garden: gardenTotal,
         park: parkTotal,
       },
-      grandTotal: baseTotal + gardenTotal + parkTotal,
+      grandTotal: finalGrandTotal,
       effectiveUnitPrice,
     };
   }, [items, baseUnitPrice, selectedMilestones]);
@@ -198,7 +203,7 @@ const FCMDinnerCalc: React.FC = () => {
                 <p className="text-xs text-slate-400">{house.bonusInfo}</p>
               </div>
               
-              <div className="flex-grow flex flex-col items-center justify-center p-4 space-y-3">
+              <div className="flex-grow flex items-center justify-center p-2 gap-2">
                 <FoodItemCounter label="Pizzas" type="pizzas" count={items[house.id].pizzas} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
                 <FoodItemCounter label="Burgers" type="burgers" count={items[house.id].burgers} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
                 <FoodItemCounter label="Drinks" type="drinks" count={items[house.id].drinks} onItemChange={(type, change) => handleItemChange(house.id, type, change)} />
