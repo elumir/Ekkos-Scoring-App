@@ -26,7 +26,7 @@ const EMPLOYEES = [
   { id: 'PRICING', label: 'Pricing Manager (–$3)', description: 'Reduces unit price by $3 per manager.' },
   { id: 'LUXURY_MANAGER', label: 'Luxury Manager (+$10)', description: 'Increases unit price by $10. Limit one.' },
   { id: 'WAITRESS', label: 'Waitress (+$3)', description: 'Adds a flat $3 to total revenue per waitress.' },
-  { id: 'FRY_CHEF', label: 'Fry Chef (+$10)', description: 'Adds a flat $10 to total revenue per fry chef.' },
+  { id: 'FRY_CHEF', label: 'Fry Chef (+$10/house)', description: 'Adds $10 per house served to total revenue, per fry chef.' },
   { id: 'CFO', label: 'CFO (+50%)', description: 'Adds 50% to total revenue. Cannot be used with $100 milestone.' },
 ];
 
@@ -88,6 +88,7 @@ const FCMDinnerCalc: React.FC = () => {
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
   const [employeeCounts, setEmployeeCounts] = useState(initialEmployeeCountsState);
   const [salariesCount, setSalariesCount] = useState(0);
+  const [fryChefHouses, setFryChefHouses] = useState(0);
 
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
@@ -153,6 +154,10 @@ const FCMDinnerCalc: React.FC = () => {
         }
         return countsChanged ? newCounts : currentCounts;
     });
+
+    if (!selectedEmployees.has('FRY_CHEF')) {
+      setFryChefHouses(0);
+    }
   }, [selectedEmployees]);
 
   useEffect(() => {
@@ -229,6 +234,10 @@ const FCMDinnerCalc: React.FC = () => {
       [employeeId]: Math.max(0, prev[employeeId] + change)
     }));
   };
+  
+  const handleFryChefHousesChange = (change: number) => {
+    setFryChefHouses(prev => Math.max(0, prev + change));
+  };
 
   const handleSalariesChange = (change: number) => {
     setSalariesCount(prev => Math.max(0, prev + change));
@@ -243,6 +252,7 @@ const FCMDinnerCalc: React.FC = () => {
     setItems(initialItemsState);
     setSelectedEmployees(new Set());
     setEmployeeCounts(initialEmployeeCountsState);
+    setFryChefHouses(0);
   };
 
   const handleResetAll = () => {
@@ -274,7 +284,8 @@ const FCMDinnerCalc: React.FC = () => {
     const drinkBonus = selectedMilestones.has('DRINK_MARKETED') ? 5 : 0;
 
     const waitressBonus = 3 + (selectedMilestones.has('FIRST_WAITRESS') ? 2 : 0);
-    const flatEmployeeBonus = (employeeCounts.WAITRESS * waitressBonus) + (employeeCounts.FRY_CHEF * 10);
+    const fryChefBonus = employeeCounts.FRY_CHEF * fryChefHouses * 10;
+    const flatEmployeeBonus = (employeeCounts.WAITRESS * waitressBonus) + fryChefBonus;
 
     const calculateSubtotal = (foodItems: FoodItems, priceMultiplier: number) => {
       const pizzaTotal = foodItems.pizzas * (effectiveUnitPrice * priceMultiplier + pizzaBonus);
@@ -324,7 +335,7 @@ const FCMDinnerCalc: React.FC = () => {
       trainingDiscount,
       salaryPerEmployee,
     };
-  }, [items, selectedMilestones, selectedModules, employeeCounts, selectedEmployees, baseUnitPrice, salariesCount]);
+  }, [items, selectedMilestones, selectedModules, employeeCounts, selectedEmployees, baseUnitPrice, salariesCount, fryChefHouses]);
 
   const availableEmployees = useMemo(() => {
     if (selectedMilestones.has('HAVE_100')) {
@@ -356,6 +367,8 @@ const FCMDinnerCalc: React.FC = () => {
     selectedEmployees.has(emp.id) && (emp.id === 'DISCOUNT' || emp.id === 'PRICING' || emp.id === 'WAITRESS' || emp.id === 'FRY_CHEF')
   );
 
+  const fryChefBonus = employeeCounts.FRY_CHEF * fryChefHouses * 10;
+
   return (
     <div className="flex-grow w-full flex flex-col items-center p-4 space-y-4 overflow-y-auto">
       <h1 className="text-3xl font-bold text-slate-100">Food Chain Magnate Calculator</h1>
@@ -385,7 +398,7 @@ const FCMDinnerCalc: React.FC = () => {
                 <p className="text-5xl font-mono text-green-400 font-bold">+${flatEmployeeBonus}</p>
                 <p className="text-center text-xs text-slate-400 mt-1 space-x-2">
                   {employeeCounts.WAITRESS > 0 && <span>Waitress: ${employeeCounts.WAITRESS * waitressBonus}</span>}
-                  {employeeCounts.FRY_CHEF > 0 && <span>Fry Chef: ${employeeCounts.FRY_CHEF * 10}</span>}
+                  {employeeCounts.FRY_CHEF > 0 && <span>Fry Chef: ${fryChefBonus}</span>}
                 </p>
             </div>
         </div>
@@ -410,14 +423,38 @@ const FCMDinnerCalc: React.FC = () => {
           <h3 className="text-lg font-semibold text-slate-300 mb-3 text-center">Employee Counts</h3>
           <div className="flex justify-center flex-wrap gap-4">
             {countableEmployees.map(emp => (
-              <div key={emp.id} className="flex flex-col items-center space-y-1 p-2 rounded-lg bg-slate-700/50 min-w-[180px]">
-                <p className="text-slate-300 text-sm font-semibold truncate" title={emp.label}>{emp.label}</p>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => handleEmployeeCountChange(emp.id as EmployeeType, -1)} className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none" aria-label={`Decrease ${emp.label}`}>-</button>
-                  <span className="text-2xl font-mono w-10 text-center select-none">{employeeCounts[emp.id as EmployeeType]}</span>
-                  <button onClick={() => handleEmployeeCountChange(emp.id as EmployeeType, 1)} className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none" aria-label={`Increase ${emp.label}`}>+</button>
+              emp.id === 'FRY_CHEF' ? (
+                <div key={emp.id} className="flex flex-col items-center space-y-1 p-2 rounded-lg bg-slate-700/50 min-w-[240px]">
+                  <p className="text-slate-300 text-sm font-semibold truncate" title={emp.label}>{emp.label}</p>
+                  <div className="flex items-start gap-4">
+                    <div className="flex flex-col items-center space-y-1">
+                      <p className="text-xs text-slate-400">Chefs</p>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => handleEmployeeCountChange(emp.id as EmployeeType, -1)} className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none" aria-label={`Decrease ${emp.label}`}>-</button>
+                        <span className="text-2xl font-mono w-10 text-center select-none">{employeeCounts[emp.id as EmployeeType]}</span>
+                        <button onClick={() => handleEmployeeCountChange(emp.id as EmployeeType, 1)} className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none" aria-label={`Increase ${emp.label}`}>+</button>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-center space-y-1">
+                      <p className="text-xs text-slate-400">Houses Served</p>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => handleFryChefHousesChange(-1)} className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none" aria-label="Decrease Houses Served">-</button>
+                        <span className="text-2xl font-mono w-10 text-center select-none">{fryChefHouses}</span>
+                        <button onClick={() => handleFryChefHousesChange(1)} className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none" aria-label="Increase Houses Served">+</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div key={emp.id} className="flex flex-col items-center space-y-1 p-2 rounded-lg bg-slate-700/50 min-w-[180px]">
+                  <p className="text-slate-300 text-sm font-semibold truncate" title={emp.label}>{emp.label}</p>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => handleEmployeeCountChange(emp.id as EmployeeType, -1)} className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none" aria-label={`Decrease ${emp.label}`}>-</button>
+                    <span className="text-2xl font-mono w-10 text-center select-none">{employeeCounts[emp.id as EmployeeType]}</span>
+                    <button onClick={() => handleEmployeeCountChange(emp.id as EmployeeType, 1)} className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none" aria-label={`Increase ${emp.label}`}>+</button>
+                  </div>
+                </div>
+              )
             ))}
           </div>
         </div>
