@@ -29,21 +29,21 @@ const initialPlayerScore: AgricolaPlayerScore = {
 
 type Category = keyof AgricolaPlayerScore;
 
-const SCORING_CATEGORIES: { id: Category; label: string }[] = [
-    { id: 'fields', label: 'Fields' },
-    { id: 'pastures', label: 'Pastures' },
-    { id: 'grain', label: 'Grain' },
-    { id: 'vegetables', label: 'Vegetables' },
-    { id: 'sheep', label: 'Sheep' },
-    { id: 'wildBoar', label: 'Wild Boar' },
-    { id: 'cattle', label: 'Cattle' },
-    { id: 'unusedSpaces', label: 'Unused Spaces' },
-    { id: 'fencedStables', label: 'Fenced Stables' },
-    { id: 'clayRooms', label: 'Clay Rooms' },
-    { id: 'stoneRooms', label: 'Stone Rooms' },
-    { id: 'familyMembers', label: 'Family Members' },
-    { id: 'beggingCards', label: 'Begging Cards' },
-    { id: 'bonusPoints', label: 'Bonus Points' },
+const SCORING_CATEGORIES: { id: Category; label: string; color: string; textColor: string; }[] = [
+    { id: 'fields', label: 'Fields', color: '#D2B48C', textColor: 'text-black/80' },
+    { id: 'pastures', label: 'Pastures', color: '#2E8B57', textColor: 'text-white' },
+    { id: 'grain', label: 'Grain', color: '#F0E68C', textColor: 'text-black/80' },
+    { id: 'vegetables', label: 'Vegetables', color: '#E67E22', textColor: 'text-white' },
+    { id: 'sheep', label: 'Sheep', color: '#DCDCDC', textColor: 'text-black/80' },
+    { id: 'wildBoar', label: 'Wild Boar', color: '#696969', textColor: 'text-white' },
+    { id: 'cattle', label: 'Cattle', color: '#8B4513', textColor: 'text-white' },
+    { id: 'unusedSpaces', label: 'Unused Spaces', color: '#556B2F', textColor: 'text-white' },
+    { id: 'fencedStables', label: 'Fenced Stables', color: '#A0522D', textColor: 'text-white' },
+    { id: 'clayRooms', label: 'Clay Rooms', color: '#CD5C5C', textColor: 'text-white' },
+    { id: 'stoneRooms', label: 'Stone Rooms', color: '#B0C4DE', textColor: 'text-black/80' },
+    { id: 'familyMembers', label: 'Family Members', color: '#4682B4', textColor: 'text-white' },
+    { id: 'beggingCards', label: 'Begging Cards', color: '#B22222', textColor: 'text-white' },
+    { id: 'bonusPoints', label: 'Bonus Points', color: '#B8860B', textColor: 'text-white' },
 ];
 
 const calculatePoints = (scores: AgricolaPlayerScore): Record<Category, number> => {
@@ -197,7 +197,11 @@ const AgricolaScorer: React.FC<AgricolaScorerProps> = ({ players, onUpdatePlayer
                     <p className="text-xs text-slate-400 uppercase tracking-wider">Total</p>
                 </div>
                 {SCORING_CATEGORIES.map(cat => (
-                    <div key={cat.id} className="h-14 flex items-center justify-center text-center p-2 border-b border-slate-800">
+                    <div 
+                        key={cat.id} 
+                        className={`h-14 flex items-center justify-center text-center p-2 border-b border-black/20 font-semibold ${cat.textColor}`}
+                        style={{ backgroundColor: cat.color }}
+                    >
                        <span className="text-sm">{cat.label}</span>
                     </div>
                 ))}
@@ -205,7 +209,7 @@ const AgricolaScorer: React.FC<AgricolaScorerProps> = ({ players, onUpdatePlayer
             <div className="flex-grow w-full flex overflow-x-auto">
                 <div className="flex flex-nowrap space-x-2 p-2">
                     {players.map(player => (
-                        <div key={player.id} className="w-40 flex-shrink-0 bg-slate-800 rounded-lg flex flex-col border border-slate-700 shadow-lg">
+                        <div key={player.id} className="w-40 flex-shrink-0 bg-slate-800 rounded-lg flex flex-col border border-slate-700 shadow-lg overflow-hidden">
                             <div className={`p-3 text-center border-b-2 ${player.color.border} h-16 flex items-center justify-center`}>
                                 {editingPlayerName?.id === player.id ? (
                                     <input type="text" value={editingPlayerName.name}
@@ -224,12 +228,16 @@ const AgricolaScorer: React.FC<AgricolaScorerProps> = ({ players, onUpdatePlayer
                                 <p className="text-4xl font-bold font-mono">{totals[player.id] ?? 0}</p>
                             </div>
                             {scores[player.id] && SCORING_CATEGORIES.map(cat => (
-                                <div key={cat.id} className="h-14 flex items-center justify-between p-2 border-b border-slate-800 last:border-b-0">
+                                <div 
+                                    key={cat.id} 
+                                    className="h-14 flex items-center justify-between p-2 border-b border-slate-800 last:border-b-0"
+                                    style={{ backgroundColor: `${cat.color}33`}}
+                                >
                                     <ScoreInput 
                                         value={scores[player.id][cat.id]} 
                                         onChange={val => handleScoreChange(player.id, cat.id, val)} 
                                     />
-                                    <span className="text-xs text-slate-400 w-6 text-right font-mono">
+                                    <span className="text-xs text-slate-300 w-6 text-right font-mono">
                                         ({points[player.id]?.[cat.id] ?? 0})
                                     </span>
                                 </div>
