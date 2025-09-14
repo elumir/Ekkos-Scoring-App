@@ -16,6 +16,7 @@ interface AgricolaPlayerScore {
   stoneRooms: number;
   familyMembers: number;
   beggingCards: number;
+  cardPoints: number;
   bonusPoints: number;
 }
 
@@ -24,7 +25,7 @@ const initialPlayerScore: AgricolaPlayerScore = {
   sheep: 0, wildBoar: 0, cattle: 0,
   unusedSpaces: 0, fencedStables: 0,
   clayRooms: 0, stoneRooms: 0,
-  familyMembers: 2, beggingCards: 0, bonusPoints: 0,
+  familyMembers: 2, beggingCards: 0, cardPoints: 0, bonusPoints: 0,
 };
 
 type Category = keyof AgricolaPlayerScore;
@@ -43,6 +44,7 @@ const SCORING_CATEGORIES: { id: Category; label: string; color: string; textColo
     { id: 'stoneRooms', label: 'Stone Rooms', color: '#B0C4DE', textColor: 'text-black/80' },
     { id: 'familyMembers', label: 'Family Members', color: '#4682B4', textColor: 'text-white' },
     { id: 'beggingCards', label: 'Begging Cards', color: '#B22222', textColor: 'text-white' },
+    { id: 'cardPoints', label: 'Card Points', color: '#DAA520', textColor: 'text-white' },
     { id: 'bonusPoints', label: 'Bonus Points', color: '#B8860B', textColor: 'text-white' },
 ];
 
@@ -111,6 +113,9 @@ const calculatePoints = (scores: AgricolaPlayerScore): Record<Category, number> 
     // Begging Cards: -3pts per card
     pts.beggingCards = scores.beggingCards * -3;
 
+    // Card Points: 1pt per point
+    pts.cardPoints = scores.cardPoints;
+
     // Bonus Points: 1pt per point
     pts.bonusPoints = scores.bonusPoints;
 
@@ -150,7 +155,7 @@ const AgricolaScorer: React.FC<AgricolaScorerProps> = ({ players, onUpdatePlayer
     }, [initializeScores]);
 
     const handleScoreChange = (playerId: number, category: Category, value: number) => {
-        const isNegativeAllowed = category === 'bonusPoints';
+        const isNegativeAllowed = category === 'bonusPoints' || category === 'cardPoints';
         const newValue = isNegativeAllowed ? value : Math.max(0, value);
 
         setScores(prev => ({
@@ -207,7 +212,7 @@ const AgricolaScorer: React.FC<AgricolaScorerProps> = ({ players, onUpdatePlayer
                 ))}
             </div>
             <div className="flex-grow w-full flex overflow-x-auto">
-                <div className="flex flex-nowrap space-x-2 p-2">
+                <div className="flex flex-nowrap space-x-2 px-2 pb-2">
                     {players.map(player => (
                         <div key={player.id} className="w-40 flex-shrink-0 bg-slate-800 rounded-lg flex flex-col border border-slate-700 shadow-lg overflow-hidden">
                             <div className={`p-3 text-center border-b-2 ${player.color.border} h-16 flex items-center justify-center`}>
