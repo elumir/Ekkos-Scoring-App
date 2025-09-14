@@ -13,12 +13,16 @@ const MILESTONES = [
   { id: 'PIZZA_MARKETED', label: 'First Pizza Marketed', description: '+$5 bonus per pizza' },
   { id: 'BURGER_MARKETED', label: 'First Burger Marketed', description: '+$5 bonus per burger' },
   { id: 'DRINK_MARKETED', label: 'First Drink Marketed', description: '+$5 bonus per drink' },
+  { id: 'FIRST_WAITRESS', label: 'First Waitress Played', description: '+$2 bonus per waitress' },
   { id: 'HAVE_100', label: 'First to Have $100', description: '+50% to cash earned' },
 ];
 
 const EMPLOYEES = [
   { id: 'DISCOUNT', label: 'Discount Manager (–$1)', description: 'Reduces unit price by $1 per manager.' },
   { id: 'PRICING', label: 'Pricing Manager (–$3)', description: 'Reduces unit price by $3 per manager.' },
+  { id: 'LUXURY_MANAGER', label: 'Luxury Manager (+$10)', description: 'Increases unit price by $10. Limit one.' },
+  { id: 'WAITRESS', label: 'Waitress (+$3)', description: 'Adds a flat $3 to total revenue per waitress.' },
+  { id: 'FRY_CHEF', label: 'Fry Chef (+$10)', description: 'Adds a flat $10 to total revenue per fry chef.' },
 ];
 
 type FoodType = 'pizzas' | 'burgers' | 'drinks' | 'coffee' | 'noodles' | 'kimchi' | 'sushi';
@@ -32,7 +36,7 @@ interface FoodItems {
   sushi: number;
 }
 type HouseType = 'base' | 'garden' | 'park';
-type EmployeeType = 'DISCOUNT' | 'PRICING';
+type EmployeeType = 'DISCOUNT' | 'PRICING' | 'WAITRESS' | 'FRY_CHEF';
 
 const FoodItemCounter: React.FC<{
   label: string,
@@ -63,7 +67,7 @@ const FoodItemCounter: React.FC<{
 );
 
 const FCMDinnerCalc: React.FC = () => {
-  const [baseUnitPrice, setBaseUnitPrice] = useState<number>(10);
+  const baseUnitPrice = 10;
   const [items, setItems] = useState<Record<HouseType, FoodItems>>({
     base: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
     garden: { pizzas: 0, burgers: 0, drinks: 0, coffee: 0, noodles: 0, kimchi: 0, sushi: 0 },
@@ -72,7 +76,7 @@ const FCMDinnerCalc: React.FC = () => {
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
   const [selectedMilestones, setSelectedMilestones] = useState<Set<string>>(new Set());
   const [selectedEmployees, setSelectedEmployees] = useState<Set<string>>(new Set());
-  const [employeeCounts, setEmployeeCounts] = useState({ DISCOUNT: 0, PRICING: 0 });
+  const [employeeCounts, setEmployeeCounts] = useState({ DISCOUNT: 0, PRICING: 0, WAITRESS: 0, FRY_CHEF: 0 });
 
   const [isModuleDropdownOpen, setIsModuleDropdownOpen] = useState(false);
   const [isMilestoneDropdownOpen, setIsMilestoneDropdownOpen] = useState(false);
@@ -149,6 +153,14 @@ const FCMDinnerCalc: React.FC = () => {
             newCounts.PRICING = 0;
             countsChanged = true;
         }
+        if (!selectedEmployees.has('WAITRESS') && newCounts.WAITRESS > 0) {
+            newCounts.WAITRESS = 0;
+            countsChanged = true;
+        }
+        if (!selectedEmployees.has('FRY_CHEF') && newCounts.FRY_CHEF > 0) {
+            newCounts.FRY_CHEF = 0;
+            countsChanged = true;
+        }
         return countsChanged ? newCounts : currentCounts;
     });
   }, [selectedEmployees]);
@@ -188,15 +200,24 @@ const FCMDinnerCalc: React.FC = () => {
   };
 
   const handleEmployeeToggle = (employeeId: string) => {
+    const isCurrentlySelected = selectedEmployees.has(employeeId);
+
     setSelectedEmployees(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(employeeId)) {
+      if (isCurrentlySelected) {
         newSet.delete(employeeId);
       } else {
         newSet.add(employeeId);
       }
       return newSet;
     });
+
+    if (!isCurrentlySelected && (employeeId === 'DISCOUNT' || employeeId === 'PRICING' || employeeId === 'WAITRESS' || employeeId === 'FRY_CHEF')) {
+      setEmployeeCounts(prevCounts => ({
+        ...prevCounts,
+        [employeeId as EmployeeType]: 1,
+      }));
+    }
   };
 
   const handleEmployeeCountChange = (employeeId: EmployeeType, change: number) => {
@@ -206,14 +227,18 @@ const FCMDinnerCalc: React.FC = () => {
     }));
   };
 
-  const { totals, grandTotal, effectiveUnitPrice } = useMemo(() => {
+  const { totals, grandTotal, effectiveUnitPrice, employeeDeduction, flatEmployeeBonus, waitressBonus } = useMemo(() => {
     const hasLowerPrices = selectedMilestones.has('LOWER_PRICES');
     const employeeDeduction = (employeeCounts.DISCOUNT * 1) + (employeeCounts.PRICING * 3);
-    const effectiveUnitPrice = Math.max(0, baseUnitPrice - (hasLowerPrices ? 1 : 0) - employeeDeduction);
+    const luxuryBonus = selectedEmployees.has('LUXURY_MANAGER') ? 10 : 0;
+    const effectiveUnitPrice = Math.max(0, baseUnitPrice + luxuryBonus - (hasLowerPrices ? 1 : 0) - employeeDeduction);
 
     const pizzaBonus = selectedMilestones.has('PIZZA_MARKETED') ? 5 : 0;
     const burgerBonus = selectedMilestones.has('BURGER_MARKETED') ? 5 : 0;
     const drinkBonus = selectedMilestones.has('DRINK_MARKETED') ? 5 : 0;
+
+    const waitressBonus = 3 + (selectedMilestones.has('FIRST_WAITRESS') ? 2 : 0);
+    const flatEmployeeBonus = (employeeCounts.WAITRESS * waitressBonus) + (employeeCounts.FRY_CHEF * 10);
 
     const calculateSubtotal = (foodItems: FoodItems, priceMultiplier: number) => {
       const pizzaTotal = foodItems.pizzas * (effectiveUnitPrice * priceMultiplier + pizzaBonus);
@@ -231,7 +256,7 @@ const FCMDinnerCalc: React.FC = () => {
     const gardenTotal = calculateSubtotal(items.garden, 2);
     const parkTotal = isLobbyistEnabled ? calculateSubtotal(items.park, 3) : 0;
 
-    const preBonusTotal = baseTotal + gardenTotal + parkTotal;
+    const preBonusTotal = baseTotal + gardenTotal + parkTotal + flatEmployeeBonus;
     const has100Milestone = selectedMilestones.has('HAVE_100');
     const finalGrandTotal = has100Milestone ? Math.floor(preBonusTotal * 1.5) : preBonusTotal;
 
@@ -243,8 +268,11 @@ const FCMDinnerCalc: React.FC = () => {
       },
       grandTotal: finalGrandTotal,
       effectiveUnitPrice,
+      employeeDeduction,
+      flatEmployeeBonus,
+      waitressBonus,
     };
-  }, [items, baseUnitPrice, selectedMilestones, selectedModules, employeeCounts]);
+  }, [items, selectedMilestones, selectedModules, employeeCounts, selectedEmployees]);
 
   const getSelectedLabel = (items: any[], selectedIds: Set<string>, defaultText: string, singularText: string, pluralText: string) => {
     if (selectedIds.size === 0) return defaultText;
@@ -264,28 +292,38 @@ const FCMDinnerCalc: React.FC = () => {
   const isLobbyistEnabled = selectedModules.has('LOBBYIST');
   const visibleHouseTypes = houseTypes.filter(house => house.id !== 'park' || isLobbyistEnabled);
   const gridColsClass = visibleHouseTypes.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2';
-  const visibleEmployees = EMPLOYEES.filter(emp => selectedEmployees.has(emp.id));
+  
+  const countableEmployees = EMPLOYEES.filter(emp =>
+    selectedEmployees.has(emp.id) && (emp.id === 'DISCOUNT' || emp.id === 'PRICING' || emp.id === 'WAITRESS' || emp.id === 'FRY_CHEF')
+  );
 
   return (
     <div className="flex-grow w-full flex flex-col items-center p-4 space-y-4 overflow-y-auto">
       <h1 className="text-xl font-bold text-yellow-400 animate-pulse tracking-widest">WORK IN PROGRESS</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-xl mb-4 flex-shrink-0">
-        <div className="bg-slate-800 p-4 rounded-lg w-full border border-slate-700 shadow-lg">
-          <label htmlFor="unitPrice" className="block text-lg font-semibold text-slate-300 mb-2 text-center">
-            Base Unit Price
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-2xl font-mono">$</span>
-            <input
-              id="unitPrice"
-              type="number"
-              value={baseUnitPrice}
-              onChange={(e) => setBaseUnitPrice(Math.max(0, Number(e.target.value)))}
-              className="w-full bg-slate-700 text-white text-2xl font-mono p-2 rounded focus:outline-none focus:ring-2 focus:ring-sky-500 text-center pl-8"
-              aria-label="Base unit price for food"
-            />
-          </div>
-          <p className="text-center text-sm text-sky-400 mt-2">Effective Price: ${effectiveUnitPrice}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full max-w-5xl mb-4 flex-shrink-0">
+        <div className="grid grid-cols-2 gap-4">
+            <div className="bg-slate-800 p-4 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col items-center justify-center">
+                <label className="block text-base font-semibold text-slate-300 mb-1 text-center">
+                    Effective Unit Price
+                </label>
+                <p className="text-5xl font-mono text-sky-400 font-bold">${effectiveUnitPrice}</p>
+                <p className="text-center text-xs text-slate-400 mt-1 space-x-2">
+                  <span>Base: ${baseUnitPrice}</span>
+                  {selectedEmployees.has('LUXURY_MANAGER') && <span className="text-green-400"> +${10}</span>}
+                  {selectedMilestones.has('LOWER_PRICES') && <span className="text-red-400"> -${1}</span>}
+                  {employeeDeduction > 0 && <span className="text-red-400"> -${employeeDeduction}</span>}
+                </p>
+            </div>
+            <div className="bg-slate-800 p-4 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col items-center justify-center">
+                <label className="block text-base font-semibold text-slate-300 mb-1 text-center">
+                    Flat Employee Bonus
+                </label>
+                <p className="text-5xl font-mono text-green-400 font-bold">+${flatEmployeeBonus}</p>
+                <p className="text-center text-xs text-slate-400 mt-1 space-x-2">
+                  {employeeCounts.WAITRESS > 0 && <span>Waitress: ${employeeCounts.WAITRESS * waitressBonus}</span>}
+                  {employeeCounts.FRY_CHEF > 0 && <span>Fry Chef: ${employeeCounts.FRY_CHEF * 10}</span>}
+                </p>
+            </div>
         </div>
         <div className="grid grid-cols-1 gap-4">
           <div ref={moduleDropdownRef} className="relative bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
@@ -306,11 +344,11 @@ const FCMDinnerCalc: React.FC = () => {
         </div>
       </div>
 
-      {visibleEmployees.length > 0 && (
-        <div className="w-full max-w-xl p-4 bg-slate-800 rounded-lg border border-slate-700 shadow-lg">
+      {countableEmployees.length > 0 && (
+        <div className="w-full max-w-4xl p-4 bg-slate-800 rounded-lg border border-slate-700 shadow-lg">
           <h3 className="text-lg font-semibold text-slate-300 mb-3 text-center">Employee Counts</h3>
           <div className="flex justify-center flex-wrap gap-4">
-            {visibleEmployees.map(emp => (
+            {countableEmployees.map(emp => (
               <div key={emp.id} className="flex flex-col items-center space-y-1 p-2 rounded-lg bg-slate-700/50 min-w-[180px]">
                 <p className="text-slate-300 text-sm font-semibold truncate" title={emp.label}>{emp.label}</p>
                 <div className="flex items-center gap-2">
@@ -328,9 +366,15 @@ const FCMDinnerCalc: React.FC = () => {
         <div className={`grid grid-cols-1 ${gridColsClass} gap-4 w-full max-w-5xl`}>
           {visibleHouseTypes.map(house => (
             <div key={house.id} className="w-full flex-shrink-0 bg-slate-800 rounded-lg flex flex-col border border-slate-700 shadow-lg">
-              <div className="p-3 text-center border-b-2 border-slate-600 h-16 flex flex-col items-center justify-center">
-                <h2 className="text-lg font-bold truncate">{house.label}</h2>
-                <p className="text-xs text-slate-400">{house.bonusInfo}</p>
+              <div className="p-3 border-b-2 border-slate-600 h-16 flex items-center justify-between">
+                <div className="text-left">
+                    <h2 className="text-lg font-bold truncate">{house.label}</h2>
+                    <p className="text-xs text-slate-400">{house.bonusInfo}</p>
+                </div>
+                <div className="text-right">
+                    <p className="text-sm text-slate-400">Subtotal</p>
+                    <p className="text-2xl font-bold font-mono">${totals[house.id]}</p>
+                </div>
               </div>
               
               <div className="flex-grow p-2">
@@ -345,16 +389,12 @@ const FCMDinnerCalc: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 text-center border-t-2 border-slate-700 bg-black/20">
-                <p className="text-sm text-slate-400">Subtotal</p>
-                <p className="text-4xl font-bold font-mono">${totals[house.id]}</p>
-              </div>
             </div>
           ))}
         </div>
         <div className="w-full max-w-5xl mt-6 p-4 bg-slate-800 border border-sky-500 rounded-lg shadow-lg flex items-center justify-between flex-shrink-0">
-            <h2 className="text-2xl font-bold">Total Revenue</h2>
-            <p className="text-5xl font-bold font-mono text-sky-400">${grandTotal}</p>
+            <h2 className="text-xl font-bold">Total Revenue</h2>
+            <p className="text-4xl font-bold font-mono text-sky-400">${grandTotal}</p>
         </div>
       </main>
     </div>
