@@ -26,6 +26,7 @@ const EMPLOYEES = [
   { id: 'LUXURY_MANAGER', label: 'Luxury Manager (+$10)', description: 'Increases unit price by $10. Limit one.' },
   { id: 'WAITRESS', label: 'Waitress (+$3)', description: 'Adds a flat $3 to total revenue per waitress.' },
   { id: 'FRY_CHEF', label: 'Fry Chef (+$10)', description: 'Adds a flat $10 to total revenue per fry chef.' },
+  { id: 'CFO', label: 'CFO (+50%)', description: 'Adds 50% to total revenue. Cannot be used with $100 milestone.' },
 ];
 
 type FoodType = 'pizzas' | 'burgers' | 'drinks' | 'coffee' | 'noodles' | 'kimchi' | 'sushi';
@@ -146,6 +147,19 @@ const FCMDinnerCalc: React.FC = () => {
     });
   }, [selectedEmployees]);
 
+  useEffect(() => {
+    if (selectedMilestones.has('HAVE_100')) {
+      setSelectedEmployees(prev => {
+        if (prev.has('CFO')) {
+          const newSet = new Set(prev);
+          newSet.delete('CFO');
+          return newSet;
+        }
+        return prev;
+      });
+    }
+  }, [selectedMilestones]);
+
   const handleItemChange = (houseType: HouseType, foodType: FoodType, change: number) => {
     setItems(prev => ({
       ...prev,
@@ -259,7 +273,9 @@ const FCMDinnerCalc: React.FC = () => {
     const totalAfterSalaries = preBonusTotal - netSalariesCost;
     
     const has100Milestone = selectedMilestones.has('HAVE_100');
-    const finalGrandTotal = has100Milestone ? Math.floor(totalAfterSalaries * 1.5) : totalAfterSalaries;
+    const hasCFO = selectedEmployees.has('CFO');
+    const has50PercentBonus = has100Milestone || hasCFO;
+    const finalGrandTotal = has50PercentBonus ? Math.floor(totalAfterSalaries * 1.5) : totalAfterSalaries;
 
     return {
       totals: {
@@ -277,6 +293,13 @@ const FCMDinnerCalc: React.FC = () => {
       salaryPerEmployee,
     };
   }, [items, selectedMilestones, selectedModules, employeeCounts, selectedEmployees, baseUnitPrice, salariesCount]);
+
+  const availableEmployees = useMemo(() => {
+    if (selectedMilestones.has('HAVE_100')) {
+        return EMPLOYEES.filter(emp => emp.id !== 'CFO');
+    }
+    return EMPLOYEES;
+  }, [selectedMilestones]);
 
   const getSelectedLabel = (items: any[], selectedIds: Set<string>, defaultText: string, singularText: string, pluralText: string) => {
     if (selectedIds.size === 0) return defaultText;
@@ -501,7 +524,7 @@ const FCMDinnerCalc: React.FC = () => {
         isOpen={isEmployeeModalOpen}
         onClose={() => setIsEmployeeModalOpen(false)}
         title="Select Employees"
-        options={EMPLOYEES}
+        options={availableEmployees}
         selectedIds={selectedEmployees}
         onToggle={handleEmployeeToggle}
       />
