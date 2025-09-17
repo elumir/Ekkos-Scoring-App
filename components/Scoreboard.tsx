@@ -113,7 +113,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ players, onScoreChange, onReset
   return (
     <div className="h-screen w-screen bg-slate-900 text-white flex flex-col font-sans">
       <header className="w-full flex items-center justify-between p-4 flex-shrink-0 bg-slate-900/80 backdrop-blur-sm z-10 border-b border-slate-700">
-         <div className="w-36 flex justify-start">
+        <div className="flex items-center gap-4">
           <button 
             onClick={onExit} 
             className="p-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-full shadow-lg transition-transform transform hover:scale-105"
@@ -123,8 +123,8 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ players, onScoreChange, onReset
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
+          <h1 className="text-2xl md:text-3xl font-bold">Scoreboard</h1>
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold">Scoreboard</h1>
         <div className="relative w-36" ref={modeDropdownRef}>
             <button
                 onClick={() => setIsModeDropdownOpen(prev => !prev)}
