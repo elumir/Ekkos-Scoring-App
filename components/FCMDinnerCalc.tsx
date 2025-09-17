@@ -90,12 +90,14 @@ const FCMDinnerCalc: React.FC = () => {
   const [salariesCount, setSalariesCount] = useState(0);
   const [fryChefHouses, setFryChefHouses] = useState(0);
 
+  const [revenueHistory, setRevenueHistory] = useState<number[]>([]);
+  const [isHistoryVisible, setIsHistoryVisible] = useState(false);
+
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [isReserveModalOpen, setIsReserveModalOpen] = useState(false);
-  const [isResetDinnerConfirmOpen, setIsResetDinnerConfirmOpen] = useState(false);
-  const [isResetAllConfirmOpen, setIsResetAllConfirmOpen] = useState(false);
+  const [isNewGameConfirmOpen, setIsNewGameConfirmOpen] = useState(false);
   
   useEffect(() => {
     const foodModuleMapping: { [key: string]: FoodType } = {
@@ -254,6 +256,11 @@ const FCMDinnerCalc: React.FC = () => {
     setEmployeeCounts(initialEmployeeCountsState);
     setFryChefHouses(0);
   };
+  
+  const handleRecordAndResetDinner = () => {
+    setRevenueHistory(prev => [...prev, dinnerRevenue]);
+    handleResetDinner();
+  };
 
   const handleResetAll = () => {
     handleResetDinner();
@@ -261,19 +268,15 @@ const FCMDinnerCalc: React.FC = () => {
     setBaseUnitPrice(10);
     setSelectedModules(new Set());
     setSelectedMilestones(new Set());
+    setRevenueHistory([]);
   };
 
-  const handleConfirmResetDinner = () => {
-    handleResetDinner();
-    setIsResetDinnerConfirmOpen(false);
-  };
-
-  const handleConfirmResetAll = () => {
+  const handleConfirmNewGame = () => {
     handleResetAll();
-    setIsResetAllConfirmOpen(false);
+    setIsNewGameConfirmOpen(false);
   };
 
-  const { totals, grandTotal, effectiveUnitPrice, employeeDeduction, flatEmployeeBonus, waitressBonus, salariesCost, trainingDiscount, salaryPerEmployee } = useMemo(() => {
+  const { totals, dinnerRevenue, effectiveUnitPrice, employeeDeduction, flatEmployeeBonus, waitressBonus, salariesCost, trainingDiscount, salaryPerEmployee } = useMemo(() => {
     const hasLowerPrices = selectedMilestones.has('LOWER_PRICES');
     const employeeDeduction = (employeeCounts.DISCOUNT * 1) + (employeeCounts.PRICING * 3);
     const luxuryBonus = selectedEmployees.has('LUXURY_MANAGER') ? 10 : 0;
@@ -326,7 +329,7 @@ const FCMDinnerCalc: React.FC = () => {
         garden: gardenTotal,
         park: parkTotal,
       },
-      grandTotal: finalGrandTotal,
+      dinnerRevenue: finalGrandTotal,
       effectiveUnitPrice,
       employeeDeduction,
       flatEmployeeBonus,
@@ -368,6 +371,7 @@ const FCMDinnerCalc: React.FC = () => {
   );
 
   const fryChefBonus = employeeCounts.FRY_CHEF * fryChefHouses * 10;
+  const totalBank = revenueHistory.reduce((acc, val) => acc + val, 0);
 
   return (
     <div className="flex-grow w-full flex flex-col items-center p-4 space-y-4 overflow-y-auto">
@@ -520,23 +524,55 @@ const FCMDinnerCalc: React.FC = () => {
         </div>
         
         <div className="w-full max-w-5xl mt-2 p-4 bg-slate-800 border border-sky-500 rounded-lg shadow-lg flex items-center justify-between flex-shrink-0">
-            <h2 className="text-xl font-bold">Total Revenue</h2>
-            <p className="text-4xl font-bold font-mono text-sky-400">${grandTotal}</p>
+            <h2 className="text-xl font-bold">Dinner Revenue</h2>
+            <p className="text-4xl font-bold font-mono text-sky-400">${dinnerRevenue}</p>
+        </div>
+        
+        <div className="w-full max-w-5xl mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-lg flex flex-col flex-shrink-0">
+          <button
+            onClick={() => setIsHistoryVisible(prev => !prev)}
+            className="p-4 flex items-center justify-between w-full text-left hover:bg-slate-700/50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500"
+          >
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-bold">Total Bank</h2>
+              <p className="text-2xl font-bold font-mono text-green-400">${totalBank}</p>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-slate-400 transition-transform duration-300 ${isHistoryVisible ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {isHistoryVisible && (
+            <div className="p-4 border-t border-slate-600 animate-fade-in">
+              <h3 className="text-lg font-semibold mb-2 text-slate-300">Revenue History</h3>
+              {revenueHistory.length > 0 ? (
+                <ul className="space-y-1 max-h-40 overflow-y-auto pr-2">
+                  {revenueHistory.map((revenue, index) => (
+                    <li key={index} className="flex justify-between items-center text-slate-300 font-mono text-lg p-1 rounded bg-slate-700/50">
+                      <span>Dinner {index + 1}:</span>
+                      <span>${revenue}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-slate-400 italic">No dinners recorded yet.</p>
+              )}
+            </div>
+          )}
         </div>
       </main>
 
       <footer className="w-full max-w-5xl mt-4 flex items-center justify-center gap-4 flex-shrink-0">
         <button
-          onClick={() => setIsResetAllConfirmOpen(true)}
+          onClick={() => setIsNewGameConfirmOpen(true)}
           className="px-6 py-2 bg-yellow-500/80 hover:bg-yellow-500 text-white font-semibold rounded-full shadow-lg transition-transform transform hover:scale-105"
         >
-          Reset All
+          New Game
         </button>
         <button
-          onClick={() => setIsResetDinnerConfirmOpen(true)}
+          onClick={handleRecordAndResetDinner}
           className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-full shadow-lg transition-transform transform hover:scale-105"
         >
-          Reset Dinner
+          Record Dinner &amp; Reset
         </button>
       </footer>
 
@@ -614,22 +650,12 @@ const FCMDinnerCalc: React.FC = () => {
       />
 
       <ConfirmationModal
-        isOpen={isResetDinnerConfirmOpen}
-        onClose={() => setIsResetDinnerConfirmOpen(false)}
-        onConfirm={handleConfirmResetDinner}
-        title="Reset Dinner"
-        message="Are you sure you want to reset all food items and employee selections for this turn?"
-        confirmButtonText="Reset Dinner"
-        confirmButtonClass="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-lg transition-colors"
-      />
-
-      <ConfirmationModal
-        isOpen={isResetAllConfirmOpen}
-        onClose={() => setIsResetAllConfirmOpen(false)}
-        onConfirm={handleConfirmResetAll}
-        title="Reset All"
-        message="Are you sure you want to reset the entire calculator to its default state? This will clear modules and milestones."
-        confirmButtonText="Reset All"
+        isOpen={isNewGameConfirmOpen}
+        onClose={() => setIsNewGameConfirmOpen(false)}
+        onConfirm={handleConfirmNewGame}
+        title="Start New Game"
+        message="Are you sure you want to start a new game? This will reset the entire calculator, including all revenue history."
+        confirmButtonText="New Game"
         confirmButtonClass="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg transition-colors"
       />
 
