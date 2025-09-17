@@ -19,6 +19,7 @@ const MILESTONES = [
   { id: 'FIRST_WAITRESS_USED', label: 'First Waitress Used', description: 'Reduces salaries to $3 each' },
   { id: 'FIRST_TO_TRAIN', label: 'First to Train Someone', description: 'First $15 of salaries do not count.' },
   { id: 'HAVE_100', label: 'First to Have $100', description: '+50% to cash earned' },
+  { id: 'FIRST_MARKETEER_USED', label: 'First Marketeer Used', description: '+$5 per good marketed (after 50% bonus).' },
 ];
 
 const EMPLOYEES = [
@@ -89,6 +90,7 @@ const FCMDinnerCalc: React.FC = () => {
   const [employeeCounts, setEmployeeCounts] = useState(initialEmployeeCountsState);
   const [salariesCount, setSalariesCount] = useState(0);
   const [fryChefHouses, setFryChefHouses] = useState(0);
+  const [goodsMarketed, setGoodsMarketed] = useState(0);
 
   const [revenueHistory, setRevenueHistory] = useState<number[]>([]);
   const [isHistoryVisible, setIsHistoryVisible] = useState(false);
@@ -244,6 +246,10 @@ const FCMDinnerCalc: React.FC = () => {
   const handleSalariesChange = (change: number) => {
     setSalariesCount(prev => Math.max(0, prev + change));
   };
+  
+  const handleGoodsMarketedChange = (change: number) => {
+    setGoodsMarketed(prev => Math.max(0, prev + change));
+  };
 
   const handleReserveSelect = (price: number) => {
     setBaseUnitPrice(price);
@@ -255,6 +261,7 @@ const FCMDinnerCalc: React.FC = () => {
     setSelectedEmployees(new Set());
     setEmployeeCounts(initialEmployeeCountsState);
     setFryChefHouses(0);
+    setGoodsMarketed(0);
   };
   
   const handleRecordAndResetDinner = () => {
@@ -276,7 +283,7 @@ const FCMDinnerCalc: React.FC = () => {
     setIsNewGameConfirmOpen(false);
   };
 
-  const { totals, dinnerRevenue, effectiveUnitPrice, employeeDeduction, flatEmployeeBonus, waitressBonus, salariesCost, trainingDiscount, salaryPerEmployee } = useMemo(() => {
+  const { totals, dinnerRevenue, effectiveUnitPrice, employeeDeduction, flatEmployeeBonus, waitressBonus, salariesCost, trainingDiscount, salaryPerEmployee, marketeerBonus } = useMemo(() => {
     const hasLowerPrices = selectedMilestones.has('LOWER_PRICES');
     const employeeDeduction = (employeeCounts.DISCOUNT * 1) + (employeeCounts.PRICING * 3);
     const luxuryBonus = selectedEmployees.has('LUXURY_MANAGER') ? 10 : 0;
@@ -312,6 +319,9 @@ const FCMDinnerCalc: React.FC = () => {
     const hasCFO = selectedEmployees.has('CFO');
     const has50PercentBonus = has100Milestone || hasCFO;
     const totalAfterBonus = has50PercentBonus ? Math.floor(preBonusTotal * 1.5) : preBonusTotal;
+
+    const hasMarketeerMilestone = selectedMilestones.has('FIRST_MARKETEER_USED');
+    const marketeerBonus = hasMarketeerMilestone ? goodsMarketed * 5 : 0;
     
     const hasFirstWaitressUsed = selectedMilestones.has('FIRST_WAITRESS_USED');
     const salaryPerEmployee = hasFirstWaitressUsed ? 3 : 5;
@@ -321,7 +331,7 @@ const FCMDinnerCalc: React.FC = () => {
     const trainingDiscount = hasFirstToTrain ? Math.min(salariesCost, 15) : 0;
     const netSalariesCost = salariesCost - trainingDiscount;
 
-    const finalGrandTotal = totalAfterBonus - netSalariesCost;
+    const finalGrandTotal = totalAfterBonus + marketeerBonus - netSalariesCost;
 
     return {
       totals: {
@@ -337,8 +347,9 @@ const FCMDinnerCalc: React.FC = () => {
       salariesCost,
       trainingDiscount,
       salaryPerEmployee,
+      marketeerBonus,
     };
-  }, [items, selectedMilestones, selectedModules, employeeCounts, selectedEmployees, baseUnitPrice, salariesCount, fryChefHouses]);
+  }, [items, selectedMilestones, selectedModules, employeeCounts, selectedEmployees, baseUnitPrice, salariesCount, fryChefHouses, goodsMarketed]);
 
   const availableEmployees = useMemo(() => {
     if (selectedMilestones.has('HAVE_100')) {
@@ -522,6 +533,33 @@ const FCMDinnerCalc: React.FC = () => {
             )}
           </div>
         </div>
+
+        {selectedMilestones.has('FIRST_MARKETEER_USED') && (
+          <div className="w-full max-w-5xl mt-2 p-4 bg-slate-800 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center gap-2">
+            <h3 className="text-lg font-semibold text-slate-300">Marketeer Bonus</h3>
+            <div className="flex flex-col items-center space-y-1 p-2 rounded-lg bg-slate-700/50 min-w-[240px]">
+              <p className="text-slate-300 text-sm font-semibold">Number of Goods Marketed (+$5 each)</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleGoodsMarketedChange(-1)}
+                  className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none"
+                  aria-label="Decrease Goods Marketed"
+                >
+                  -
+                </button>
+                <span className="text-2xl font-mono w-10 text-center select-none">{goodsMarketed}</span>
+                <button
+                  onClick={() => handleGoodsMarketedChange(1)}
+                  className="w-7 h-7 text-lg rounded-full bg-slate-600 hover:bg-slate-500 transition-colors flex items-center justify-center leading-none"
+                  aria-label="Increase Goods Marketed"
+                >
+                  +
+                </button>
+              </div>
+              <p className="text-sm text-green-400 font-mono">Total Marketeer Bonus: +${marketeerBonus}</p>
+            </div>
+          </div>
+        )}
         
         <div className="w-full max-w-5xl mt-2 p-4 bg-slate-800 border border-sky-500 rounded-lg shadow-lg flex items-center justify-between flex-shrink-0">
             <h2 className="text-xl font-bold">Dinner Revenue</h2>
