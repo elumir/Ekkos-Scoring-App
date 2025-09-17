@@ -304,6 +304,11 @@ const FCMDinnerCalc: React.FC = () => {
     const parkTotal = isLobbyistEnabled ? calculateSubtotal(items.park, 3) : 0;
 
     const preBonusTotal = baseTotal + gardenTotal + parkTotal + flatEmployeeBonus;
+
+    const has100Milestone = selectedMilestones.has('HAVE_100');
+    const hasCFO = selectedEmployees.has('CFO');
+    const has50PercentBonus = has100Milestone || hasCFO;
+    const totalAfterBonus = has50PercentBonus ? Math.floor(preBonusTotal * 1.5) : preBonusTotal;
     
     const hasFirstWaitressUsed = selectedMilestones.has('FIRST_WAITRESS_USED');
     const salaryPerEmployee = hasFirstWaitressUsed ? 3 : 5;
@@ -313,12 +318,7 @@ const FCMDinnerCalc: React.FC = () => {
     const trainingDiscount = hasFirstToTrain ? Math.min(salariesCost, 15) : 0;
     const netSalariesCost = salariesCost - trainingDiscount;
 
-    const totalAfterSalaries = preBonusTotal - netSalariesCost;
-    
-    const has100Milestone = selectedMilestones.has('HAVE_100');
-    const hasCFO = selectedEmployees.has('CFO');
-    const has50PercentBonus = has100Milestone || hasCFO;
-    const finalGrandTotal = has50PercentBonus ? Math.floor(totalAfterSalaries * 1.5) : totalAfterSalaries;
+    const finalGrandTotal = totalAfterBonus - netSalariesCost;
 
     return {
       totals: {
