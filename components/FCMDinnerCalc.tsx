@@ -3,7 +3,7 @@ import MultiSelectModal from './MultiSelectModal';
 import ConfirmationModal from './ConfirmationModal';
 
 const MODULES = [
-  { id: 'LOBBYIST', label: 'LOBBYIST - Add parks', description: 'Enables houses with parks (3x price).' },
+  { id: 'LOBBYIST', label: 'Lobbyist', description: 'Add park to building (2x).' },
   { id: 'COFFEE', label: 'Coffee', description: 'Enables coffee.' },
   { id: 'NOODLES', label: 'Noodles', description: 'Enables noodles.' },
   { id: 'KIMCHI', label: 'Kimchi', description: 'Enables kimchi.' },
@@ -369,7 +369,7 @@ const FCMDinnerCalc: React.FC = () => {
 
   const houseTypes: { id: HouseType, label: string, bonusInfo: string }[] = [
     { id: 'base', label: 'Base House', bonusInfo: '1x Price' },
-    { id: 'garden', label: 'House + (Garden / Park)', bonusInfo: '2x Price' },
+    { id: 'garden', label: 'House + Garden', bonusInfo: '2x Price' },
     { id: 'park', label: 'House, Garden, & Park', bonusInfo: '3x Price' },
   ];
 
@@ -382,11 +382,35 @@ const FCMDinnerCalc: React.FC = () => {
   );
 
   const fryChefBonus = employeeCounts.FRY_CHEF * fryChefHouses * 10;
-  const totalBank = revenueHistory.reduce((acc, val) => acc + val, 0);
+  const totalRevenue = revenueHistory.reduce((acc, val) => acc + val, 0);
 
   return (
     <div className="flex-grow w-full flex flex-col items-center p-4 space-y-4 overflow-y-auto">
-      <h1 className="text-3xl font-bold text-slate-100">Food Chain Magnate Calculator</h1>
+      <div className="w-full max-w-5xl flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-slate-100">Food Chain Magnate Calculator</h1>
+        <div className="relative">
+            <button
+            onClick={() => setIsModuleModalOpen(true)}
+            className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75"
+            aria-label="Select Modules"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 24 24">
+                  <g>
+                      <rect x="5.251" y="12.749" width="4.5" height="4.5" rx="1" ry="1" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"></rect>
+                      <rect x="8.251" y="5.249" width="6" height="4.5" rx="1" ry="1" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"></rect>
+                      <path d="M14.251 17.249a1.5 1.5 0 0 1-1.5-1.5v-1.5a1.5 1.5 0 0 1 1.5-1.5h1.5a1.5 1.5 0 0 1 1.5 1.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"></path>
+                      <path d="M18.28 22.743l-2.529.506.506-2.529 4.552-4.552a1.43 1.43 0 0 1 2.023 0 1.43 1.43 0 0 1 0 2.023z" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"></path>
+                      <path d="M12.751 23.249h-10.5a1.5 1.5 0 0 1-1.5-1.5v-19.5a1.5 1.5 0 0 1 1.5-1.5h15a1.5 1.5 0 0 1 1.048.426l3 2.883a1.5 1.5 0 0 1 .452 1.074v7.617" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"></path>
+                  </g>
+                </svg>
+                {selectedModules.size > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-xs font-bold text-white">
+                    {selectedModules.size}
+                    </span>
+                )}
+            </button>
+        </div>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full max-w-5xl mb-4 flex-shrink-0">
         <div className="grid grid-cols-2 gap-4">
             <button 
@@ -418,10 +442,6 @@ const FCMDinnerCalc: React.FC = () => {
             </div>
         </div>
         <div className="grid grid-cols-1 gap-4">
-          <div className="bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
-            <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">Modules Used</label>
-            <button onClick={() => setIsModuleModalOpen(true)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(MODULES, selectedModules, 'Select Modules', 'Module', 'Modules Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
-          </div>
           <div className="bg-slate-800 p-3 rounded-lg w-full border border-slate-700 shadow-lg flex flex-col justify-center">
             <label className="block text-sm font-semibold text-slate-300 mb-1 text-center">Milestones</label>
             <button onClick={() => setIsMilestoneModalOpen(true)} className="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400"><span className="truncate">{getSelectedLabel(MILESTONES, selectedMilestones, 'Select Milestones', 'Milestone', 'Milestones Selected')}</span><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg></button>
@@ -572,8 +592,8 @@ const FCMDinnerCalc: React.FC = () => {
             className="p-4 flex items-center justify-between w-full text-left hover:bg-slate-700/50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500"
           >
             <div className="flex items-center gap-4">
-              <h2 className="text-xl font-bold">Total Bank</h2>
-              <p className="text-2xl font-bold font-mono text-green-400">${totalBank}</p>
+              <h2 className="text-xl font-bold">Total Revenue</h2>
+              <p className="text-2xl font-bold font-mono text-green-400">${totalRevenue}</p>
             </div>
             <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 text-slate-400 transition-transform duration-300 ${isHistoryVisible ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />

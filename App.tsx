@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, AppMode } from './types';
 import type { Finger, FingerColor, SelectionMode, PlayerScore, AppSettings } from './types';
@@ -108,7 +109,7 @@ const App: React.FC = () => {
     setGameState(GameState.IDLE);
   }, []);
 
-  const requiredFingers = Math.max(2, selectionMode);
+  const requiredFingers = selectionMode > 1 ? selectionMode + 1 : 2;
 
   const handleTouch = (e: React.TouchEvent<HTMLDivElement>) => {
     if (gameState === GameState.RESULT) {
@@ -300,10 +301,16 @@ const App: React.FC = () => {
   };
 
   const renderStatusText = () => {
-    const fingerPlural = requiredFingers === 1 ? 'finger' : 'fingers';
     switch (gameState) {
       case GameState.IDLE:
-        return `Place ${requiredFingers} or more ${fingerPlural} on the screen`;
+        if (selectionMode === 1) {
+          return "Place 2 or more fingers to select a winner.";
+        } else {
+          // Fix: In this 'else' block, selectionMode is never 1, so teamPlural should always be 'teams'.
+          // The original comparison `selectionMode === 1` caused a type error.
+          const teamPlural = 'teams';
+          return `Place ${requiredFingers} or more fingers to separate into ${selectionMode} ${teamPlural}.`;
+        }
       case GameState.DETECTING:
         return `${fingers.size} ${fingers.size === 1 ? 'finger' : 'fingers'} detected...`;
       case GameState.CHOOSING:
@@ -493,7 +500,7 @@ const App: React.FC = () => {
               {gameState === GameState.CHOOSING && countdown !== null && countdown > 0 ? (
                   <h1 className="text-9xl font-bold text-white drop-shadow-xl animate-pulse">{countdown}</h1>
                ) : (
-                  <h1 className="text-4xl md:text-6xl font-bold text-slate-200 drop-shadow-lg">
+                  <h1 className="text-4xl md:text-6xl font-bold text-slate-200 drop-shadow-lg px-4">
                   {renderStatusText()}
                   </h1>
               )}
