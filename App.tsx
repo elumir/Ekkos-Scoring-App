@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, AppMode } from './types';
 import type { Finger, FingerColor, SelectionMode, PlayerScore, AppSettings } from './types';
@@ -444,8 +445,18 @@ const App: React.FC = () => {
                     className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-75"
                     aria-label="Switch to score mode"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M22.822 13.387l-6.51 8.606-3.612 1.258.228-3.817 6.51-8.606a2.115 2.115 0 0 1 2.963-.411l.01.007a2.116 2.116 0 0 1 .411 2.963z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 23.251H2.25a1.556 1.556 0 0 1-1.5-1.607V5.359a1.557 1.557 0 0 1 1.5-1.608h19.5a1.557 1.557 0 0 1 1.5 1.608v1.392" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25.751v4.5" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75.751v4.5" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.25.751v4.5" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M18.75.751v4.5" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.376a1.125 1.125 0 0 1 1.125-1.125A1.125 1.125 0 0 1 6 9.376a1.6 1.6 0 0 1-.351 1l-1.9 2.373H6" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12.75 8.251h.75a.75.75 0 0 1 .75.75v3.75" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12.75 12.751H15" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.001v3" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 10.501h3" />
                     </svg>
                 </button>
                 {isFullScreen && (
@@ -496,8 +507,18 @@ const App: React.FC = () => {
                   className="p-4 bg-white/20 hover:bg-white/40 border-2 border-white/50 rounded-full shadow-lg transition-transform transform hover:scale-105"
                   aria-label="Go to scoreboard"
               >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M22.822 13.387l-6.51 8.606-3.612 1.258.228-3.817 6.51-8.606a2.115 2.115 0 0 1 2.963-.411l.01.007a2.116 2.116 0 0 1 .411 2.963z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 23.251H2.25a1.556 1.556 0 0 1-1.5-1.607V5.359a1.557 1.557 0 0 1 1.5-1.608h19.5a1.557 1.557 0 0 1 1.5 1.608v1.392" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25.751v4.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75.751v4.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.25.751v4.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M18.75.751v4.5" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.376a1.125 1.125 0 0 1 1.125-1.125A1.125 1.125 0 0 1 6 9.376a1.6 1.6 0 0 1-.351 1l-1.9 2.373H6" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12.75 8.251h.75a.75.75 0 0 1 .75.75v3.75" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12.75 12.751H15" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.001v3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 10.501h3" />
                   </svg>
               </button>
               <button

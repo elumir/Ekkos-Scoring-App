@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { PlayerScore } from '../types';
 import NumberPadModal from './NumberPadModal';
@@ -112,16 +113,17 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ players, onScoreChange, onReset
   return (
     <div className="h-screen w-screen bg-slate-900 text-white flex flex-col font-sans">
       <header className="w-full flex items-center justify-between p-4 flex-shrink-0 bg-slate-900/80 backdrop-blur-sm z-10 border-b border-slate-700">
-         <button 
-          onClick={onExit} 
-          className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-full shadow-lg transition-transform transform hover:scale-105"
-          aria-label="Back to chooser mode"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          <span>Chooser</span>
-        </button>
+         <div className="w-36 flex justify-start">
+          <button 
+            onClick={onExit} 
+            className="p-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-full shadow-lg transition-transform transform hover:scale-105"
+            aria-label="Back to chooser mode"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
         <h1 className="text-2xl md:text-3xl font-bold">Scoreboard</h1>
         <div className="relative w-36" ref={modeDropdownRef}>
             <button
