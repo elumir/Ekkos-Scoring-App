@@ -2,6 +2,17 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { PlayerScore } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 
+const FieldIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">
+        <rect x=".75" y=".75" width="22.5" height="22.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+        <path d="M4.09,4.19c1.77,0,3.51-.71,5.27-.71s3.55,1.41,5.27,1.41,3.48-.71,5.27-.71" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+        <path d="M4.09,8.1c1.77,0,3.51-.71,5.27-.71s3.55,1.41,5.27,1.41,3.48-.71,5.27-.71" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+        <path d="M4.09,12c1.77,0,3.51-.7,5.27-.7s3.55,1.41,5.27,1.41,3.48-.7,5.27-.7" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+        <path d="M4.09,15.9c1.77,0,3.51-.7,5.27-.7s3.55,1.41,5.27,1.41,3.48-.7,5.27-.7" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+        <path d="M4.09,19.81c1.77,0,3.51-.71,5.27-.71s3.55,1.41,5.27,1.41,3.48-.71,5.27-.71" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+    </svg>
+);
+
 interface AgricolaPlayerScore {
   fields: number;
   pastures: number;
@@ -30,8 +41,8 @@ const initialPlayerScore: AgricolaPlayerScore = {
 
 type Category = keyof AgricolaPlayerScore;
 
-const SCORING_CATEGORIES: { id: Category; label: string; color: string; textColor: string; }[] = [
-    { id: 'fields', label: 'Fields', color: '#D2B48C', textColor: 'text-black/80' },
+const SCORING_CATEGORIES: { id: Category; label: string; color: string; textColor: string; icon?: React.ReactNode; }[] = [
+    { id: 'fields', label: 'Fields', color: '#D2B48C', textColor: 'text-black/80', icon: <FieldIcon /> },
     { id: 'pastures', label: 'Pastures', color: '#2E8B57', textColor: 'text-white' },
     { id: 'grain', label: 'Grain', color: '#F0E68C', textColor: 'text-black/80' },
     { id: 'vegetables', label: 'Vegetables', color: '#E67E22', textColor: 'text-white' },
@@ -205,7 +216,10 @@ const AgricolaScorer: React.FC<AgricolaScorerProps> = ({ players, onUpdatePlayer
                             className={`h-14 flex items-center justify-center text-center p-2 border-b border-black/20 font-semibold ${cat.textColor}`}
                             style={{ backgroundColor: cat.color }}
                         >
-                           <span className="text-sm">{cat.label}</span>
+                           <div className="flex items-center justify-center gap-2">
+                                {cat.icon}
+                                <span className="text-sm">{cat.label}</span>
+                           </div>
                         </div>
                     ))}
                 </div>
