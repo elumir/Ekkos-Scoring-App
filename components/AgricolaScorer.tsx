@@ -195,27 +195,29 @@ const AgricolaScorer: React.FC<AgricolaScorerProps> = ({ players, onUpdatePlayer
         <div className="flex-grow w-full flex flex-col">
         <main className="flex-grow w-full flex overflow-hidden">
             <div className="w-40 flex-shrink-0 bg-slate-800/50 flex flex-col border-r border-slate-700">
-                <div className="p-3 text-center h-16 flex items-center justify-center border-b-2 border-slate-600">
+                <div className="p-3 text-center h-16 flex items-center justify-center border-b-2 border-slate-600 flex-shrink-0">
                     <h2 className="text-lg font-bold">Category</h2>
                 </div>
-                <div className="p-3 text-center h-20 flex flex-col justify-center border-b-2 border-slate-700 bg-black/20">
+                <div className="flex-grow overflow-y-auto">
+                    {SCORING_CATEGORIES.map(cat => (
+                        <div 
+                            key={cat.id} 
+                            className={`h-14 flex items-center justify-center text-center p-2 border-b border-black/20 font-semibold ${cat.textColor}`}
+                            style={{ backgroundColor: cat.color }}
+                        >
+                           <span className="text-sm">{cat.label}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="p-3 text-center h-20 flex flex-col justify-center border-t-2 border-slate-700 bg-black/20 flex-shrink-0">
                     <p className="text-xs text-slate-400 uppercase tracking-wider">Total</p>
                 </div>
-                {SCORING_CATEGORIES.map(cat => (
-                    <div 
-                        key={cat.id} 
-                        className={`h-14 flex items-center justify-center text-center p-2 border-b border-black/20 font-semibold ${cat.textColor}`}
-                        style={{ backgroundColor: cat.color }}
-                    >
-                       <span className="text-sm">{cat.label}</span>
-                    </div>
-                ))}
             </div>
             <div className="flex-grow w-full flex overflow-x-auto">
                 <div className="flex flex-nowrap space-x-2 px-2 pb-2">
                     {players.map(player => (
                         <div key={player.id} className="w-40 flex-shrink-0 bg-slate-800 rounded-lg flex flex-col border border-slate-700 shadow-lg overflow-hidden">
-                            <div className={`p-3 text-center border-b-2 ${player.color.border} h-16 flex items-center justify-center`}>
+                            <div className={`p-3 text-center border-b-2 ${player.color.border} h-16 flex items-center justify-center flex-shrink-0`}>
                                 {editingPlayerName?.id === player.id ? (
                                     <input type="text" value={editingPlayerName.name}
                                         onChange={(e) => setEditingPlayerName({ ...editingPlayerName, name: e.target.value })}
@@ -229,24 +231,26 @@ const AgricolaScorer: React.FC<AgricolaScorerProps> = ({ players, onUpdatePlayer
                                     </h2>
                                 )}
                             </div>
-                            <div className="p-3 text-center border-b-2 border-slate-700 bg-black/20 h-20">
+                            <div className="flex-grow overflow-y-auto">
+                                {scores[player.id] && SCORING_CATEGORIES.map(cat => (
+                                    <div 
+                                        key={cat.id} 
+                                        className="h-14 flex items-center justify-between p-2 border-b border-slate-800 last:border-b-0"
+                                        style={{ backgroundColor: `${cat.color}33`}}
+                                    >
+                                        <ScoreInput 
+                                            value={scores[player.id][cat.id]} 
+                                            onChange={val => handleScoreChange(player.id, cat.id, val)} 
+                                        />
+                                        <span className="text-xs text-slate-300 w-6 text-right font-mono">
+                                            ({points[player.id]?.[cat.id] ?? 0})
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="p-3 text-center border-t-2 border-slate-700 bg-black/20 h-20 flex flex-col justify-center flex-shrink-0">
                                 <p className="text-4xl font-bold font-mono">{totals[player.id] ?? 0}</p>
                             </div>
-                            {scores[player.id] && SCORING_CATEGORIES.map(cat => (
-                                <div 
-                                    key={cat.id} 
-                                    className="h-14 flex items-center justify-between p-2 border-b border-slate-800 last:border-b-0"
-                                    style={{ backgroundColor: `${cat.color}33`}}
-                                >
-                                    <ScoreInput 
-                                        value={scores[player.id][cat.id]} 
-                                        onChange={val => handleScoreChange(player.id, cat.id, val)} 
-                                    />
-                                    <span className="text-xs text-slate-300 w-6 text-right font-mono">
-                                        ({points[player.id]?.[cat.id] ?? 0})
-                                    </span>
-                                </div>
-                            ))}
                         </div>
                     ))}
                 </div>
