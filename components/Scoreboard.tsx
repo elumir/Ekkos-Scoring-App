@@ -112,7 +112,7 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ players, onScoreChange, onReset
   };
 
   return (
-    <div className="h-screen w-screen bg-slate-900 text-white flex flex-col font-sans overflow-hidden">
+    <div className="h-screen w-screen bg-slate-900 text-white flex flex-col font-sans">
       <header className="w-full flex items-center justify-between p-4 flex-shrink-0 bg-slate-900/80 backdrop-blur-sm z-10 border-b border-slate-700">
         <div className="flex items-center gap-4">
           <button 
