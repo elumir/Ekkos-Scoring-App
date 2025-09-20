@@ -35,7 +35,7 @@ const VegetableIcon = () => (
 );
 
 const SheepIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-8 w-8">
         <path d="M15.395,6.678c-.196.002-.924.516-.918.635-.9-1.262-2.106-1.349-3.565-.459-1.52-.946-2.905-.78-4.094.988-1.976-.847-4.553,1.835-2.506,4.158-.216,2.841,1.01,4.055,4.271,2.972,1.298,1.197,2.569,1.25,3.812,0,2.967.622,4.59-.107,4.376-2.682" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
         <line x1="6.289" y1="17.372" x2="6.289" y2="15.346" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
         <line x1="8.16" y1="18.289" x2="8.16" y2="15.07" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
@@ -46,11 +46,16 @@ const SheepIcon = () => (
 );
 
 const WildBoarIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">
-        <path d="M11.972,22.672l.6-3.465h6.776l.882,3.465h1.659c.804-3.984,1.129-7.519.847-10.488-1.413-1.955-4.835-3.214-8.929-4.24-1.149.059-4.341,1.346-4.341,1.346,0,0-.415-.242-.988-.882-.082.282-5.616,5.971-7.588,5.753l1.906,2.4,1.376-.459c-.174-.546-.126-1.14.071-1.765-.187-.001.526,1.646,1.2,1.482l.318.776-2.365.671.6.706,3.282-.459c1.204-.163,1.986.246,2.365,1.2l.776,3.959h1.553Z" fill="currentColor"/>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-8 w-8">
+        <path d="M11.972,22.672l.6-3.465h6.776l.882,3.465h1.659c.804-3.984,1.129-7.519.847-10.488-1.413-1.955-4.835-3.214-8.929-4.24-1.149.059-4.341,1.346-4.341,1.346,0,0-.415-.242-.988-.882-.082.282-5.616,5.971-7.588,5.753l1.906,2.4,1.376-.459c-.174-.546-.126-1.14.071-1.765-.187-.001.526,1.646,1.2,1.482l.318.776-2.365.671.6.706,3.282-.459c1.204-.163,1.986.246,2.365,1.2l.776,3.959h1.553Z" fill="black"/>
     </svg>
 );
 
+const CattleIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-8 w-8">
+      <path d="M.608,2.498c-.945,3.13,5.494,5.73,7.769,3.13.452-.516.668-.937,1.274-1.06.879-.179,1.235.676,2.348.731,1.169.058,1.46-.85,2.42-.728,1.104.14,1.154,1.54,2.138,1.838,5.344.534,7.564-1.644,6.783-3.741,1.603,2.549-.165,6.8-4.522,6.413l3.946,1.028s-1.068,1.55-2.343,1.603c-1.437.06-2.836-.904-2.836-.904-1.489,3.385-2.093,6.533-1.398,9.332-1.398.238-2.052.573-2.097.987-1.419.507-2.817.497-4.193,0-.027-.52-.711-.877-2.055-1.069,1.036-.098-.207-9.27-1.398-9.167-.534.046-.863.863-2.508.863s-2.836-1.603-2.836-1.603l5.426-1.069S-1.941,9.533.608,2.498Z" fill="currentColor"/>
+    </svg>
+);
 
 interface AgricolaPlayerScore {
   fields: number;
@@ -87,7 +92,7 @@ const SCORING_CATEGORIES: { id: Category; label: string; color: string; textColo
     { id: 'vegetables', label: 'Vegetables', color: '#E67E22', textColor: 'text-white', icon: <VegetableIcon /> },
     { id: 'sheep', label: 'Sheep', color: '#DCDCDC', textColor: 'text-black/80', icon: <SheepIcon /> },
     { id: 'wildBoar', label: 'Wild Boar', color: '#696969', textColor: 'text-white', icon: <WildBoarIcon /> },
-    { id: 'cattle', label: 'Cattle', color: '#8B4513', textColor: 'text-white' },
+    { id: 'cattle', label: 'Cattle', color: '#8B4513', textColor: 'text-white', icon: <CattleIcon /> },
     { id: 'unusedSpaces', label: 'Unused Spaces', color: '#556B2F', textColor: 'text-white' },
     { id: 'fencedStables', label: 'Fenced Stables', color: '#A0522D', textColor: 'text-white' },
     { id: 'clayRooms', label: 'Clay Rooms', color: '#CD5C5C', textColor: 'text-white' },
