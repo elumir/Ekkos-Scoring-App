@@ -57,6 +57,60 @@ const CattleIcon = () => (
     </svg>
 );
 
+const UnusedSpacesIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">
+        <rect x=".749" y=".751" width="22.502" height="22.502" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+        <path d="M12,4.543c-4.101,0-7.457,3.356-7.457,7.457s3.356,7.457,7.457,7.457,7.457-3.356,7.457-7.457-3.356-7.457-7.457-7.457ZM6.034,12c0-3.281,2.685-5.966,5.966-5.966,1.38,0,2.647.485,3.654,1.268L7.302,15.654c-.783-1.007-1.268-2.274-1.268-3.654ZM12,17.966c-1.38,0-2.647-.485-3.654-1.268l8.352-8.352c.783,1.007,1.268,2.274,1.268,3.654,0,3.281-2.685,5.966-5.966,5.966Z" fill="currentColor"/>
+    </svg>
+);
+
+const FencedStablesIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">
+        <line x1="2.457" y1="2.442" x2="17.284" y2="2.442" fill="none" stroke="currentColor" strokeLinecap="square" strokeLinejoin="round" strokeWidth="3"/>
+        <line x1="21.734" y1="2.442" x2="22.089" y2="17.793" fill="none" stroke="currentColor" strokeLinecap="square" strokeLinejoin="round" strokeWidth="3"/>
+        <line x1="22.103" y1="21.97" x2="5.878" y2="21.97" fill="none" stroke="currentColor" strokeLinecap="square" strokeLinejoin="round" strokeWidth="3"/>
+        <line x1="2.406" y1="6.295" x2="1.878" y2="21.97" fill="none" stroke="currentColor" strokeLinecap="square" strokeLinejoin="round" strokeWidth="3"/>
+        <polygon points="11.997 17.793 18.078 17.793 18.078 11.517 14.808 8.479 11.997 11.517 11.997 17.793" fill="currentColor"/>
+    </svg>
+);
+
+const RoomIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">
+        <rect x=".749" y=".751" width="22.502" height="22.502" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"/>
+        <line x1="11.407" y1=".751" x2="11.407" y2="6.822" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.5"/>
+        <line x1="11.407" y1="23.253" x2="11.407" y2="18.395" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.5"/>
+        <polyline points="11.407 15.078 11.407 9.925 1.372 9.925" fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth="1.5"/>
+        <rect x="13.749" y="3.148" width="7.046" height="3.101" fill="currentColor"/>
+        <rect x=".539" y="14.939" width="7.046" height="3.101" transform="translate(-12.427 20.552) rotate(-90)" fill="currentColor"/>
+        <circle cx="19.186" cy="19.554" r="2.273" fill="currentColor"/>
+    </svg>
+);
+
+const FamilyMembersIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">
+        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/>
+    </svg>
+);
+
+const CoinIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    </svg>
+);
+
+const BeggingCardsIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">
+        <path d="M.385,12.914v-5.375c-.131-.178,13.372-.458,15.486,1.267,1.653,1.348.593,1.967-.189,2.125s-4.061-.13-4.108-.094c-.998.752,2.965,3.781,9.68,1.163.577-.225,1.855-.476,2.172,0,.319.479.186.956-.23,1.649-8.221,4.96-16.65,2.359-17.43-.64l-5.381-.094Z" fill="currentColor"/>
+    </svg>
+);
+
+const StarIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-6 w-6">
+        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/>
+    </svg>
+);
+
 interface AgricolaPlayerScore {
   fields: number;
   pastures: number;
@@ -86,21 +140,21 @@ const initialPlayerScore: AgricolaPlayerScore = {
 type Category = keyof AgricolaPlayerScore;
 
 const SCORING_CATEGORIES: { id: Category; label: string; color: string; textColor: string; icon?: React.ReactNode; }[] = [
-    { id: 'fields', label: 'Fields', color: '#D2B48C', textColor: 'text-black/80', icon: <FieldIcon /> },
+    { id: 'fields', label: 'Fields', color: '#A0522D', textColor: 'text-white', icon: <FieldIcon /> },
     { id: 'pastures', label: 'Pastures', color: '#2E8B57', textColor: 'text-white', icon: <PastureIcon /> },
     { id: 'grain', label: 'Grain', color: '#F0E68C', textColor: 'text-black/80', icon: <GrainIcon /> },
     { id: 'vegetables', label: 'Vegetables', color: '#E67E22', textColor: 'text-white', icon: <VegetableIcon /> },
     { id: 'sheep', label: 'Sheep', color: '#DCDCDC', textColor: 'text-black/80', icon: <SheepIcon /> },
     { id: 'wildBoar', label: 'Wild Boar', color: '#696969', textColor: 'text-white', icon: <WildBoarIcon /> },
     { id: 'cattle', label: 'Cattle', color: '#8B4513', textColor: 'text-white', icon: <CattleIcon /> },
-    { id: 'unusedSpaces', label: 'Unused Spaces', color: '#556B2F', textColor: 'text-white' },
-    { id: 'fencedStables', label: 'Fenced Stables', color: '#A0522D', textColor: 'text-white' },
-    { id: 'clayRooms', label: 'Clay Rooms', color: '#CD5C5C', textColor: 'text-white' },
-    { id: 'stoneRooms', label: 'Stone Rooms', color: '#B0C4DE', textColor: 'text-black/80' },
-    { id: 'familyMembers', label: 'Family Members', color: '#4682B4', textColor: 'text-white' },
-    { id: 'beggingCards', label: 'Begging Cards', color: '#B22222', textColor: 'text-white' },
-    { id: 'cardPoints', label: 'Card Points', color: '#DAA520', textColor: 'text-white' },
-    { id: 'bonusPoints', label: 'Bonus Points', color: '#B8860B', textColor: 'text-white' },
+    { id: 'unusedSpaces', label: 'Unused Spaces', color: '#556B2F', textColor: 'text-white', icon: <UnusedSpacesIcon /> },
+    { id: 'fencedStables', label: 'Fenced Stables', color: '#2E8B57', textColor: 'text-white', icon: <FencedStablesIcon /> },
+    { id: 'clayRooms', label: 'Clay Rooms', color: '#CD5C5C', textColor: 'text-white', icon: <RoomIcon /> },
+    { id: 'stoneRooms', label: 'Stone Rooms', color: '#B0C4DE', textColor: 'text-black/80', icon: <RoomIcon /> },
+    { id: 'familyMembers', label: 'Family Members', color: '#4682B4', textColor: 'text-white', icon: <FamilyMembersIcon /> },
+    { id: 'beggingCards', label: 'Begging Cards', color: '#B22222', textColor: 'text-white', icon: <BeggingCardsIcon /> },
+    { id: 'cardPoints', label: 'Card Points', color: '#DAA520', textColor: 'text-white', icon: <CoinIcon /> },
+    { id: 'bonusPoints', label: 'Bonus Points', color: '#B8860B', textColor: 'text-white', icon: <StarIcon /> },
 ];
 
 const calculatePoints = (scores: AgricolaPlayerScore): Record<Category, number> => {
