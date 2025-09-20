@@ -18,6 +18,7 @@ const loadSettingsFromStorage = (): AppSettings => {
           defaultPlayerCount: parsed.defaultPlayerCount,
           defaultPlayerNames: parsed.defaultPlayerNames,
           countdownDuration: parsed.countdownDuration || 3,
+          agricolaCategoryDisplay: parsed.agricolaCategoryDisplay || 'icons',
         };
       }
     }
@@ -28,6 +29,7 @@ const loadSettingsFromStorage = (): AppSettings => {
     defaultPlayerCount: 4,
     defaultPlayerNames: [],
     countdownDuration: 3,
+    agricolaCategoryDisplay: 'icons',
   };
 };
 
@@ -344,6 +346,7 @@ const App: React.FC = () => {
         onExit={handleExitScorer}
         onUpdatePlayerName={handleUpdatePlayerName}
         onRemoveLastScore={handleRemoveLastScore}
+        settings={settings}
       />
     );
   } else {

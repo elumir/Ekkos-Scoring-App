@@ -37,4 +37,5 @@ export interface AppSettings {
   defaultPlayerCount: number;
   defaultPlayerNames: string[];
   countdownDuration: number;
+  agricolaCategoryDisplay: 'icons' | 'text' | 'both';
 }

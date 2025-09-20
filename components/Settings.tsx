@@ -82,6 +82,30 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSettingsChange, onExit 
             </div>
           </div>
 
+          {/* Agricola Category Display Setting */}
+          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
+            <h2 className="text-xl font-semibold text-white mb-4">Agricola Category Display</h2>
+            <p className="text-slate-400 mb-4">Choose how to display scoring categories in the Agricola scoreboard.</p>
+            <div className="flex flex-wrap gap-2">
+              {(['icons', 'text', 'both'] as const).map(display => {
+                const labels: Record<typeof display, string> = { icons: 'Icons Only', text: 'Text Only', both: 'Both' };
+                return (
+                  <button
+                    key={display}
+                    onClick={() => onSettingsChange({ agricolaCategoryDisplay: display })}
+                    className={`px-4 py-2 rounded-md font-semibold text-sm transition-colors ${
+                      (settings.agricolaCategoryDisplay || 'icons') === display
+                        ? 'bg-sky-500 text-white' 
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    }`}
+                  >
+                    {labels[display]}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           {/* Default Player Names Setting */}
           <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
             <h2 className="text-xl font-semibold text-white mb-4">Default Player Names</h2>

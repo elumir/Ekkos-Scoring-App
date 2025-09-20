@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import type { PlayerScore } from '../types';
+import type { PlayerScore, AppSettings } from '../types';
 import NumberPadModal from './NumberPadModal';
 import ConfirmationModal from './ConfirmationModal';
 import AgricolaScorer from './AgricolaScorer';
@@ -13,9 +13,10 @@ interface ScoreboardProps {
   onExit: () => void;
   onUpdatePlayerName: (playerId: number, newName: string) => void;
   onRemoveLastScore: (playerId: number) => void;
+  settings: AppSettings;
 }
 
-const Scoreboard: React.FC<ScoreboardProps> = ({ players, onScoreChange, onResetScores, onExit, onUpdatePlayerName, onRemoveLastScore }) => {
+const Scoreboard: React.FC<ScoreboardProps> = ({ players, onScoreChange, onResetScores, onExit, onUpdatePlayerName, onRemoveLastScore, settings }) => {
   const [editingPlayerName, setEditingPlayerName] = useState<{ id: number; name: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activePlayer, setActivePlayer] = useState<PlayerScore | null>(null);
@@ -253,7 +254,11 @@ const Scoreboard: React.FC<ScoreboardProps> = ({ players, onScoreChange, onReset
             </footer>
         </>
       ) : scoringMode === 'agricola' ? (
-        <AgricolaScorer players={players} onUpdatePlayerName={onUpdatePlayerName} />
+        <AgricolaScorer 
+            players={players} 
+            onUpdatePlayerName={onUpdatePlayerName} 
+            categoryDisplay={settings.agricolaCategoryDisplay}
+        />
       ) : (
         <FCMDinnerCalc />
       )}
